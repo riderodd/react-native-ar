@@ -13,7 +13,12 @@ const LINKING_ERROR =
 
 type ArViewerProps = {
   model: string;
-  planeOrientation?: "none" | "vertical" | "horizontal" | "both";
+  planeOrientation?: 'none' | 'vertical' | 'horizontal' | 'both';
+  allowScale?: boolean;
+  allowRotate?: boolean;
+  allowTranslate?: boolean;
+  lightEstimation?: boolean;
+  manageDepth?: boolean;
   style?: ViewStyle;
 };
 
