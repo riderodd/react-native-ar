@@ -1,5 +1,6 @@
 const path = require('path');
 const blacklist = require('metro-config/src/defaults/blacklist');
+const assetsExts = require('metro-config/src/defaults/defaults').assetExts;
 const escape = require('escape-string-regexp');
 const pak = require('../package.json');
 
@@ -8,6 +9,9 @@ const root = path.resolve(__dirname, '..');
 const modules = Object.keys({
   ...pak.peerDependencies,
 });
+
+// Bundle usdz files too
+assetsExts.push('usdz');
 
 module.exports = {
   projectRoot: __dirname,
@@ -27,6 +31,8 @@ module.exports = {
       acc[name] = path.join(__dirname, 'node_modules', name);
       return acc;
     }, {}),
+    
+    assetExts: assetsExts,
   },
 
   transformer: {

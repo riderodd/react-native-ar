@@ -12,8 +12,9 @@ const LINKING_ERROR =
   '- You are not using Expo managed workflow\n';
 
 type ArViewerProps = {
-  color: string;
-  style: ViewStyle;
+  model: string;
+  planeOrientation?: "none" | "vertical" | "horizontal" | "both";
+  style?: ViewStyle;
 };
 
 const ComponentName = 'ArViewerView';

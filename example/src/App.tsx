@@ -1,12 +1,26 @@
 import * as React from 'react';
 
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Platform } from 'react-native';
 import { ArViewerView } from 'react-native-ar-viewer';
+import RNFS from 'react-native-fs'
 
 export default function App() {
+  const [localModelPath, setLocalModelPath] = React.useState<string>();
+
+  const loadPath = async () => {
+    const localModelPath = (await (Platform.OS === "android" ?
+    (await RNFS.readDirAssets('/assets/src/dice.usdz')).pop() :
+    RNFS.stat(RNFS.MainBundlePath + "/assets/src/dice.usdz")))?.path;
+    setLocalModelPath(localModelPath);
+  }
+
+  React.useEffect(() => {
+    loadPath();
+  })
+  
   return (
     <View style={styles.container}>
-      <ArViewerViewManager color="#32a852" style={styles.box} />
+      {localModelPath && <ArViewerView model={localModelPath} style={styles.container} />}
     </View>
   );
 }
@@ -14,12 +28,5 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
   },
 });
