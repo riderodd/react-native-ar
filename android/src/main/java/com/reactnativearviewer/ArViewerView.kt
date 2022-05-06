@@ -173,6 +173,14 @@ open class ArViewerView @JvmOverloads constructor(
     modelNode.anchor = anchor
   }
 
+
+  /**
+   * Prevent parent from treating a frame when the session was paused before unmount
+   */
+  override fun doFrame(frameTime: FrameTime) {
+    if(arSession == null || arSession!!.isResumed) super.doFrame(frameTime)
+  }
+
   /**
    * Enable/Disable instructions
    */

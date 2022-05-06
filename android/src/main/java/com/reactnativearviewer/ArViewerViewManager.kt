@@ -40,7 +40,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     Log.d("ARview onDropViewInstance", "Stopping session");
     super.onDropViewInstance(view)
     view.arSession?.pause()
-    view.destroy()
+    view.arSession?.close()
   }
 
   /**
