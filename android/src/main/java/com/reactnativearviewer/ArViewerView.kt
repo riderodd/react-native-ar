@@ -23,6 +23,7 @@ import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.arcore.LightEstimationMode
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
+import io.github.sceneview.ar.scene.PlaneRenderer
 import io.github.sceneview.environment.loadEnvironment
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
@@ -47,6 +48,10 @@ open class ArViewerView @JvmOverloads constructor(
    * Reminder to keep track of model loading state
    */
   private var isLoading = false
+  /**
+   * Reminder to keep source of model loading
+   */
+  private var modelSrc: String = ""
 
   /**
    * Set of allowed model transformations (rotate, scale, translate...)
@@ -63,6 +68,7 @@ open class ArViewerView @JvmOverloads constructor(
       modelNode.destroy()
     }
     Log.d("ARview model", "loading");
+    modelSrc = src
     isLoading = true
     modelNode = ArModelNode()
     modelNode.loadModelAsync(context = context,
@@ -81,6 +87,16 @@ open class ArViewerView @JvmOverloads constructor(
       }
     )
     modelNode.editableTransforms = allowTransform
+  }
+
+  /**
+   * Remove the model from the view and reset plane detection
+   */
+  fun resetModel() {
+    Log.d("ARview model", "Resetting model")
+    if (this::modelNode.isInitialized) {
+      loadModel(modelSrc)
+    }
   }
 
   /**

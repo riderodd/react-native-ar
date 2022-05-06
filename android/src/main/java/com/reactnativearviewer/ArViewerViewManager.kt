@@ -18,6 +18,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   companion object {
     const val COMMAND_SNAPSHOT = 1
+    const val COMMAND_RESET = 2
   }
 
   /**
@@ -33,10 +34,23 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   }
 
   /**
-   * Map the "takeScreenshot" command to an integer
+   * Pause the AR session when the view gets removed
+   */
+  override fun onDropViewInstance(view: ArViewerView) {
+    Log.d("ARview onDropViewInstance", "Stopping session");
+    super.onDropViewInstance(view)
+    view.arSession?.pause()
+    view.destroy()
+  }
+
+  /**
+   * Map the commands to an integer
    */
   override fun getCommandsMap(): Map<String, Int>? {
-    return MapBuilder.of("takeScreenshot", COMMAND_SNAPSHOT)
+    return MapBuilder.of(
+      "takeScreenshot", COMMAND_SNAPSHOT,
+      "reset", COMMAND_RESET
+    )
   }
 
   /**
@@ -51,6 +65,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
           val requestId = args.getInt(0);
           view.takeScreenshot(requestId)
         }
+      }
+      COMMAND_RESET -> {
+        view.resetModel()
       }
     }
   }
@@ -158,5 +175,14 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   fun disableInstructions(view: ArViewerView, isDisabled: Boolean) {
     Log.d("ARview setInstructions", isDisabled.toString());
     view.setInstructionsEnabled(!isDisabled)
+  }
+
+  /**
+   * Optional: disable the text instructions
+   */
+  @ReactProp(name = "disableInstantPlacement")
+  fun disableInstantPlacement(view: ArViewerView, isDisabled: Boolean) {
+    Log.d("ARview disableInstantPlacement", isDisabled.toString());
+    view.instantPlacementEnabled = !isDisabled
   }
 }

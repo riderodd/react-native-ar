@@ -12,6 +12,7 @@ import RNFS from 'react-native-fs';
 
 export default function App() {
   const [localModelPath, setLocalModelPath] = React.useState<string>();
+  const [showArView, setShowArView] = React.useState(true);
   const ref = React.useRef() as React.MutableRefObject<ArViewerView>;
 
   const loadPath = async () => {
@@ -40,22 +41,37 @@ export default function App() {
     });
   };
 
+  const reset = () => {
+    ref.current?.reset();
+  };
+
+  const mountUnMount = () => setShowArView(!showArView);
+
   return (
     <View style={styles.container}>
-      {localModelPath && (
+      {localModelPath && showArView && (
         <ArViewerView
           model={localModelPath}
-          style={styles.container}
+          style={styles.arView}
           lightEstimation
           allowScale
           allowRotate
           allowTranslate
+          disableInstantPlacement
           ref={ref}
         />
       )}
-      <TouchableHighlight onPress={takeSnapshot} style={styles.button}>
-        <Text>Take Snapshot</Text>
-      </TouchableHighlight>
+      <View style={styles.footer}>
+        <TouchableHighlight onPress={takeSnapshot} style={styles.button}>
+          <Text>Take Snapshot</Text>
+        </TouchableHighlight>
+        <TouchableHighlight onPress={mountUnMount} style={styles.button}>
+          <Text>{showArView ? 'Unmount' : 'Mount'}</Text>
+        </TouchableHighlight>
+        <TouchableHighlight onPress={reset} style={styles.button}>
+          <Text>Reset</Text>
+        </TouchableHighlight>
+      </View>
     </View>
   );
 }
@@ -63,12 +79,24 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'white',
+  },
+  arView: {
+    flex: 1,
+  },
+  footer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexWrap: 'nowrap',
+    flexDirection: 'row',
+    backgroundColor: 'white',
   },
   button: {
-    position: 'absolute',
+    borderColor: 'black',
+    borderWidth: 1,
     backgroundColor: 'white',
     padding: 10,
-    bottom: 20,
-    left: '35%',
+    margin: 5,
   },
 });

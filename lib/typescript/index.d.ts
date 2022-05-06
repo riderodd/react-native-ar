@@ -17,6 +17,7 @@ declare type ArViewerProps = {
     lightEstimation?: boolean;
     manageDepth?: boolean;
     disableInstructions?: boolean;
+    disableInstantPlacement?: boolean;
     style?: ViewStyle;
     ref?: RefObject<HostComponent<ArViewerProps> | (() => never)>;
     onDataReturned: (e: ArEvent) => void;
@@ -35,6 +36,11 @@ export declare class ArViewerView extends Component<ArInnerViewProps> {
      * @returns A promise resolving a base64 encoded image
      */
     takeScreenshot(): Promise<string>;
+    /**
+     * Reset the model positionning
+     * @returns void
+     */
+    reset(): void;
     render(): JSX.Element;
 }
 export {};

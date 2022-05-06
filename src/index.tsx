@@ -33,6 +33,7 @@ type ArViewerProps = {
   lightEstimation?: boolean;
   manageDepth?: boolean;
   disableInstructions?: boolean;
+  disableInstantPlacement?: boolean;
   style?: ViewStyle;
   ref?: RefObject<HostComponent<ArViewerProps> | (() => never)>;
   onDataReturned: (e: ArEvent) => void;
@@ -42,6 +43,7 @@ type ArViewerProps = {
 type UIManagerArViewer = {
   Commands: {
     takeScreenshot: number;
+    reset: number;
   };
 };
 
@@ -137,6 +139,19 @@ export class ArViewerView extends Component<ArInnerViewProps> {
         [requestId]
       );
     return promise;
+  }
+
+  /**
+   * Reset the model positionning
+   * @returns void
+   */
+  reset() {
+    this.nativeRef.current &&
+      UIManager.dispatchViewManagerCommand(
+        findNodeHandle(this.nativeRef.current as unknown as number),
+        (UIManager as ArViewUIManager)[ComponentName].Commands.reset.toString(),
+        []
+      );
   }
 
   render() {
