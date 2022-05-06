@@ -1,15 +1,36 @@
 package com.reactnativearviewer
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
+import android.media.Image
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.AttributeSet
+import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
+import android.view.PixelCopy
+import androidx.lifecycle.coroutineScope
+import com.facebook.react.bridge.Arguments
+import com.facebook.react.bridge.ReactContext
+import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.google.android.filament.utils.HDRLoader
 import com.google.ar.core.HitResult
 import io.github.sceneview.ar.ArSceneView
+import io.github.sceneview.ar.arcore.LightEstimationMode
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
+import io.github.sceneview.environment.loadEnvironment
 import io.github.sceneview.math.Position
+import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.Node
+import kotlinx.coroutines.delay
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+
 
 open class ArViewerView @JvmOverloads constructor(
   context: Context,
@@ -17,10 +38,24 @@ open class ArViewerView @JvmOverloads constructor(
   defStyleAttr: Int = 0,
   defStyleRes: Int = 0
 ) : ArSceneView(context, attrs, defStyleAttr, defStyleRes) {
+  /**
+   * We show only one model, let's store the ref here
+   */
   private lateinit var modelNode: ArModelNode
-  private var isLoading = false
-  private var allowTransform: MutableSet<EditableTransform> = EditableTransform.NONE as MutableSet<EditableTransform>
 
+  /**
+   * Reminder to keep track of model loading state
+   */
+  private var isLoading = false
+
+  /**
+   * Set of allowed model transformations (rotate, scale, translate...)
+   */
+  private var allowTransform = mutableSetOf<EditableTransform>()
+
+  /**
+   * Start the loading of a GLB model URI
+   */
   fun loadModel(src: String) {
     if (this::modelNode.isInitialized && modelNode.isAttached) {
       Log.d("ARview model", "detaching");
@@ -34,6 +69,7 @@ open class ArViewerView @JvmOverloads constructor(
       lifecycle = lifecycle,
       glbFileLocation = src,
       centerOrigin = Position(y = -1.0f),
+      autoAnimate = true,
       onLoaded = {
         // add node to the scene
         Log.d("ARview model", "loaded");
@@ -41,11 +77,15 @@ open class ArViewerView @JvmOverloads constructor(
       },
       onError = {
         Log.e("ARview model", "cannot load");
+        returnErrorEvent("Cannot load the model: " + it.message)
       }
     )
     modelNode.editableTransforms = allowTransform
   }
 
+  /**
+   * Add a transformation to the allowed list
+   */
   fun addAllowTransform(transform: EditableTransform) {
     allowTransform.add(transform)
     if (this::modelNode.isInitialized) {
@@ -53,6 +93,9 @@ open class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  /**
+   * Remove a transformation to the allowed list
+   */
   fun removeAllowTransform(transform: EditableTransform) {
     allowTransform.remove(transform)
     if (allowTransform.size === 0) allowTransform = EditableTransform.NONE as MutableSet<EditableTransform>
@@ -61,16 +104,19 @@ open class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  /**
+   * When the session can't start (camera permission refused for example)
+   */
   override fun onArSessionFailed(exception: Exception) {
-    Log.d("ARview session", "failed");
     super.onArSessionFailed(exception)
-    if (this::modelNode.isInitialized) {
-      modelNode.centerModel(origin = Position(x = 0.0f, y = 0.0f, z = 0.0f))
-      modelNode.scaleModel(units = 1.0f)
-      this.addChild(modelNode)
-    }
+    Log.d("ARview session", "failed");
+    returnErrorEvent(exception.message)
   }
 
+
+  /**
+   * Hide the planeRenderer when a model is added to the scene
+   */
   override fun onChildAdded(child: Node) {
     super.onChildAdded(child)
     try {
@@ -80,6 +126,9 @@ open class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  /**
+   * how the planeRenderer when there is no model shown on the scene
+   */
   override fun onChildRemoved(child: Node) {
     super.onChildRemoved(child)
     try {
@@ -89,6 +138,9 @@ open class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  /**
+   * Detect touch and add the model to the scene on the selected plane
+   */
   override fun onTouchAr(hitResult: HitResult, motionEvent: MotionEvent) {
     Log.d("ARview touch", "received");
     super.onTouchAr(hitResult, motionEvent)
@@ -104,4 +156,77 @@ open class ArViewerView @JvmOverloads constructor(
     var anchor = hitResult.createAnchor()
     modelNode.anchor = anchor
   }
+
+  /**
+   * Enable/Disable instructions
+   */
+  fun setInstructionsEnabled(isEnabled: Boolean) {
+    instructions.enabled = isEnabled
+  }
+
+  /**
+   * Takes a screenshot of the view and send it to JS through event
+   */
+  fun takeScreenshot(requestId: Int) {
+    Log.d("ARview takeScreenshot", requestId.toString());
+
+    val currentImage: Image? = currentFrame?.frame?.acquireCameraImage()
+
+    val bitmap = Bitmap.createBitmap(
+      getWidth(), getHeight(),
+      Bitmap.Config.ARGB_8888
+    )
+    val handlerThread = HandlerThread("PixelCopier")
+    var encodedImage: String? = null
+    var encodedImageError: String? = null
+    handlerThread.start()
+    PixelCopy.request(this, bitmap, { copyResult ->
+      if (copyResult === PixelCopy.SUCCESS) {
+        try {
+          val byteArrayOutputStream = ByteArrayOutputStream()
+          bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+          val byteArray = byteArrayOutputStream.toByteArray()
+          val encoded = Base64.encodeToString(byteArray, Base64.DEFAULT)
+          encodedImage = encoded
+          Log.d("ARview takeScreenshot", "success");
+        } catch (e: Exception) {
+          encodedImageError = "The image cannot be saved: " + e.localizedMessage
+          Log.d("ARview takeScreenshot", "fail");
+        }
+        returnDataEvent(requestId, encodedImage, encodedImageError)
+      }
+      handlerThread.quitSafely()
+    }, Handler(handlerThread.looper))
+  }
+
+  /**
+   * Send back an event to JS
+   */
+  private fun returnDataEvent(requestId: Int, result: String?, error: String?) {
+    val event = Arguments.createMap()
+    event.putString("requestId", requestId.toString())
+    event.putString("result", result)
+    event.putString("error", error)
+    val reactContext = context as ReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id,
+      "onDataReturned",
+      event
+    )
+  }
+
+  /**
+   * Send back an error event to JS
+   */
+  private fun returnErrorEvent(message: String?) {
+    val event = Arguments.createMap()
+    event.putString("message", message)
+    val reactContext = context as ReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id,
+      "onError",
+      event
+    )
+  }
+
 }

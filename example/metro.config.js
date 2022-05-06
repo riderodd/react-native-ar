@@ -1,5 +1,5 @@
 const path = require('path');
-const blacklist = require('metro-config/src/defaults/blacklist');
+const blacklist = require('metro-config/src/defaults/exclusionList');
 const assetsExts = require('metro-config/src/defaults/defaults').assetExts;
 const escape = require('escape-string-regexp');
 const pak = require('../package.json');
@@ -31,7 +31,6 @@ module.exports = {
       acc[name] = path.join(__dirname, 'node_modules', name);
       return acc;
     }, {}),
-    
     assetExts: assetsExts,
   },
 

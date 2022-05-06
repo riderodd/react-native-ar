@@ -1,6 +1,9 @@
 package com.reactnativearviewer
 
 import android.util.Log
+import androidx.annotation.Nullable
+import com.facebook.react.bridge.ReadableArray
+import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
@@ -8,19 +11,72 @@ import com.google.ar.core.Config
 import io.github.sceneview.ar.arcore.LightEstimationMode
 import io.github.sceneview.ar.node.EditableTransform
 
+
 class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
+  /**
+   * Assign an identifier to each command supported
+   */
+  companion object {
+    const val COMMAND_SNAPSHOT = 1
+  }
+
+  /**
+   * Name the view
+   */
   override fun getName() = "ArViewerView"
 
+  /**
+   * Create the view
+   */
   override fun createViewInstance(reactContext: ThemedReactContext): ArViewerView {
     return ArViewerView(reactContext);
   }
 
+  /**
+   * Map the "takeScreenshot" command to an integer
+   */
+  override fun getCommandsMap(): Map<String, Int>? {
+    return MapBuilder.of("takeScreenshot", COMMAND_SNAPSHOT)
+  }
+
+  /**
+   * Map methods calls to view methods
+   */
+  override fun receiveCommand(view: ArViewerView, commandId: String?, @Nullable args: ReadableArray?) {
+    super.receiveCommand(view, commandId, args)
+    Log.d("ARview receiveCommand", commandId.toString());
+    when (commandId!!.toInt()) {
+      COMMAND_SNAPSHOT -> {
+        if (args != null) {
+          val requestId = args.getInt(0);
+          view.takeScreenshot(requestId)
+        }
+      }
+    }
+  }
+
+  /**
+   * Register the view events
+   */
+  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> {
+    return MapBuilder.of(
+      "onDataReturned", MapBuilder.of("registrationName","onDataReturned"),
+      "onError", MapBuilder.of("registrationName","onError")
+    )
+  }
+
+  /**
+   * Required prop: the model src (URI)
+   */
   @ReactProp(name = "model")
   fun setModel(view: ArViewerView, model: String) {
     Log.d("ARview model", model);
     view.loadModel(model);
   }
 
+  /**
+   * Optional: the plane orientation detection (can be: horizontal, vertical, both, none)
+   */
   @ReactProp(name = "planeOrientation")
   fun setPlaneOrientation(view: ArViewerView, planeOrientation: String) {
     Log.d("ARview planeOrientation", planeOrientation);
@@ -32,6 +88,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     }
   }
 
+  /**
+   * Optional: enable ARCode light estimation
+   */
   @ReactProp(name = "lightEstimation")
   fun setPlaneOrientation(view: ArViewerView, lightEstimation: Boolean) {
     Log.d("ARview lightEstimation", lightEstimation.toString());
@@ -42,12 +101,20 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     }
   }
 
+
+  /**
+   * Optional: enable SceneView depth management
+   */
   @ReactProp(name = "manageDepth")
   fun setManageDepth(view: ArViewerView, manageDepth: Boolean) {
     Log.d("ARview manageDepth", manageDepth.toString());
     view.depthEnabled = manageDepth
   }
 
+
+  /**
+   * Optional: allow user to pinch the model to zoom it
+   */
   @ReactProp(name = "allowScale")
   fun setAllowScale(view: ArViewerView, allowScale: Boolean) {
     Log.d("ARview allowScale", allowScale.toString());
@@ -58,6 +125,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     }
   }
 
+  /**
+   * Optional: allow user to translate the model
+   */
   @ReactProp(name = "allowTranslate")
   fun setAllowTranslate(view: ArViewerView, allowTranslate: Boolean) {
     Log.d("ARview allowTranslate", allowTranslate.toString());
@@ -68,6 +138,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     }
   }
 
+  /**
+   * Optional: allow the user to rotate the model
+   */
   @ReactProp(name = "allowRotate")
   fun setAllowRotate(view: ArViewerView, allowRotate: Boolean) {
     Log.d("ARview allowRotate", allowRotate.toString());
@@ -76,5 +149,14 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     } else {
       view.removeAllowTransform(EditableTransform.ROTATION)
     }
+  }
+
+  /**
+   * Optional: disable the text instructions
+   */
+  @ReactProp(name = "disableInstructions")
+  fun disableInstructions(view: ArViewerView, isDisabled: Boolean) {
+    Log.d("ARview setInstructions", isDisabled.toString());
+    view.setInstructionsEnabled(!isDisabled)
   }
 }
