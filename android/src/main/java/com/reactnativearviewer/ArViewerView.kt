@@ -2,10 +2,6 @@ package com.reactnativearviewer
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.ImageFormat
-import android.graphics.Rect
-import android.graphics.YuvImage
-import android.media.Image
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.AttributeSet
@@ -13,25 +9,17 @@ import android.util.Base64
 import android.util.Log
 import android.view.MotionEvent
 import android.view.PixelCopy
-import androidx.lifecycle.coroutineScope
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
-import com.google.android.filament.utils.HDRLoader
 import com.google.ar.core.HitResult
 import io.github.sceneview.ar.ArSceneView
-import io.github.sceneview.ar.arcore.LightEstimationMode
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
-import io.github.sceneview.ar.scene.PlaneRenderer
-import io.github.sceneview.environment.loadEnvironment
 import io.github.sceneview.math.Position
-import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.Node
-import kotlinx.coroutines.delay
+import io.github.sceneview.utils.FrameTime
 import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
-
 
 open class ArViewerView @JvmOverloads constructor(
   context: Context,
@@ -63,11 +51,11 @@ open class ArViewerView @JvmOverloads constructor(
    */
   fun loadModel(src: String) {
     if (this::modelNode.isInitialized && modelNode.isAttached) {
-      Log.d("ARview model", "detaching");
+      Log.d("ARview model", "detaching")
       modelNode.detachAnchor()
       modelNode.destroy()
     }
-    Log.d("ARview model", "loading");
+    Log.d("ARview model", "loading")
     modelSrc = src
     isLoading = true
     modelNode = ArModelNode()
@@ -78,11 +66,11 @@ open class ArViewerView @JvmOverloads constructor(
       autoAnimate = true,
       onLoaded = {
         // add node to the scene
-        Log.d("ARview model", "loaded");
+        Log.d("ARview model", "loaded")
         isLoading = false
       },
       onError = {
-        Log.e("ARview model", "cannot load");
+        Log.e("ARview model", "cannot load")
         returnErrorEvent("Cannot load the model: " + it.message)
       }
     )
@@ -114,7 +102,7 @@ open class ArViewerView @JvmOverloads constructor(
    */
   fun removeAllowTransform(transform: EditableTransform) {
     allowTransform.remove(transform)
-    if (allowTransform.size === 0) allowTransform = EditableTransform.NONE as MutableSet<EditableTransform>
+    if (allowTransform.size == 0) allowTransform = EditableTransform.NONE as MutableSet<EditableTransform>
     if (this::modelNode.isInitialized) {
       modelNode.editableTransforms = allowTransform
     }
@@ -125,7 +113,7 @@ open class ArViewerView @JvmOverloads constructor(
    */
   override fun onArSessionFailed(exception: Exception) {
     super.onArSessionFailed(exception)
-    Log.d("ARview session", "failed");
+    Log.d("ARview session", "failed")
     returnErrorEvent(exception.message)
   }
 
@@ -138,7 +126,7 @@ open class ArViewerView @JvmOverloads constructor(
     try {
       planeRenderer.isVisible = false
     } catch (e: Exception) {
-      Log.w("ARview planeRenderer", "failed turning invisible");
+      Log.w("ARview planeRenderer", "failed turning invisible")
     }
   }
 
@@ -150,7 +138,7 @@ open class ArViewerView @JvmOverloads constructor(
     try {
       planeRenderer.isVisible = true
     } catch (e: Exception) {
-      Log.w("ARview planeRenderer", "failed turning visible");
+      Log.w("ARview planeRenderer", "failed turning visible")
     }
   }
 
@@ -158,18 +146,18 @@ open class ArViewerView @JvmOverloads constructor(
    * Detect touch and add the model to the scene on the selected plane
    */
   override fun onTouchAr(hitResult: HitResult, motionEvent: MotionEvent) {
-    Log.d("ARview touch", "received");
+    Log.d("ARview touch", "received")
     super.onTouchAr(hitResult, motionEvent)
     if (!this::modelNode.isInitialized) {
       return
     }
     if (this.children.contains(modelNode)) {
-      return;
+      return
     }
 
-    Log.d("ARview model", "attached");
+    Log.d("ARview model", "attached")
     addChild(modelNode)
-    var anchor = hitResult.createAnchor()
+    val anchor = hitResult.createAnchor()
     modelNode.anchor = anchor
   }
 
@@ -192,12 +180,10 @@ open class ArViewerView @JvmOverloads constructor(
    * Takes a screenshot of the view and send it to JS through event
    */
   fun takeScreenshot(requestId: Int) {
-    Log.d("ARview takeScreenshot", requestId.toString());
-
-    val currentImage: Image? = currentFrame?.frame?.acquireCameraImage()
+    Log.d("ARview takeScreenshot", requestId.toString())
 
     val bitmap = Bitmap.createBitmap(
-      getWidth(), getHeight(),
+      width, height,
       Bitmap.Config.ARGB_8888
     )
     val handlerThread = HandlerThread("PixelCopier")
@@ -205,17 +191,17 @@ open class ArViewerView @JvmOverloads constructor(
     var encodedImageError: String? = null
     handlerThread.start()
     PixelCopy.request(this, bitmap, { copyResult ->
-      if (copyResult === PixelCopy.SUCCESS) {
+      if (copyResult == PixelCopy.SUCCESS) {
         try {
           val byteArrayOutputStream = ByteArrayOutputStream()
-          bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream);
+          bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
           val byteArray = byteArrayOutputStream.toByteArray()
           val encoded = Base64.encodeToString(byteArray, Base64.DEFAULT)
           encodedImage = encoded
-          Log.d("ARview takeScreenshot", "success");
+          Log.d("ARview takeScreenshot", "success")
         } catch (e: Exception) {
           encodedImageError = "The image cannot be saved: " + e.localizedMessage
-          Log.d("ARview takeScreenshot", "fail");
+          Log.d("ARview takeScreenshot", "fail")
         }
         returnDataEvent(requestId, encodedImage, encodedImageError)
       }
