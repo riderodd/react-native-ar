@@ -127,6 +127,10 @@ open class ArViewerView @JvmOverloads constructor(
     returnErrorEvent(exception.message)
   }
 
+
+  /**
+   * When the session has started, launch an event to JS
+   */
   override fun onArSessionCreated(session: ArSession) {
     super.onArSessionCreated(session)
     Log.d("ARview session", "started")
