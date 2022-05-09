@@ -30,7 +30,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    * Create the view
    */
   override fun createViewInstance(reactContext: ThemedReactContext): ArViewerView {
-    return ArViewerView(reactContext);
+    return ArViewerView(reactContext)
   }
 
   /**
@@ -39,8 +39,30 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   override fun onDropViewInstance(view: ArViewerView) {
     Log.d("ARview onDropViewInstance", "Stopping session");
     super.onDropViewInstance(view)
-    view.arSession?.pause()
-    view.arSession?.close()
+    val threadPause: Thread = object : Thread() {
+      override fun run() {
+        try {
+          sleep(100)
+          view.arSession?.pause()
+        } catch (e: java.lang.Exception) {
+          e.printStackTrace()
+        }
+      }
+    }
+    val thread: Thread = object : Thread() {
+      override fun run() {
+        try {
+          threadPause.start()
+          sleep(500)
+          view.arSession?.close()
+        } catch (e: Exception) {
+          e.printStackTrace()
+        } finally {
+          Log.e("END_", "Finish")
+        }
+      }
+    }
+    thread.start()
   }
 
   /**
@@ -78,7 +100,8 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> {
     return MapBuilder.of(
       "onDataReturned", MapBuilder.of("registrationName","onDataReturned"),
-      "onError", MapBuilder.of("registrationName","onError")
+      "onError", MapBuilder.of("registrationName","onError"),
+      "onStarted", MapBuilder.of("registrationName","onStarted")
     )
   }
 

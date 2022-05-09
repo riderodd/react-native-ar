@@ -125,5 +125,5 @@ dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation 'io.github.sceneview:arsceneview:0.5.1'
+  implementation 'io.github.sceneview:arsceneview:0.5.2'
 }

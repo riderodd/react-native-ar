@@ -6,6 +6,7 @@ import {
   ViewStyle,
   findNodeHandle,
   HostComponent,
+  PermissionsAndroid,
 } from 'react-native';
 
 const LINKING_ERROR =
@@ -23,6 +24,7 @@ type ArEvent = SyntheticEvent<
   }
 >;
 type ArErrorEvent = SyntheticEvent<{}, { message: string }>;
+type ArStartedEvent = SyntheticEvent<{}, {}>;
 
 type ArViewerProps = {
   model: string;
@@ -38,6 +40,7 @@ type ArViewerProps = {
   ref?: RefObject<HostComponent<ArViewerProps> | (() => never)>;
   onDataReturned: (e: ArEvent) => void;
   onError: (e: ArErrorEvent) => void | undefined;
+  onStarted: (e: ArStartedEvent) => void | undefined;
 };
 
 type UIManagerArViewer = {
@@ -53,8 +56,12 @@ type ArViewUIManager = UIManager & {
 
 type ArInnerViewProps = Omit<
   ArViewerProps,
-  'onDataReturned' | 'ref' | 'onError'
+  'onDataReturned' | 'ref' | 'onError' | 'onStarted'
 >;
+
+type ArInnerViewState = {
+  cameraPermission: boolean;
+};
 
 const ComponentName = 'ArViewerView';
 
@@ -65,7 +72,10 @@ const ArViewerComponent =
         throw new Error(LINKING_ERROR);
       };
 
-export class ArViewerView extends Component<ArInnerViewProps> {
+export class ArViewerView extends Component<
+  ArInnerViewProps,
+  ArInnerViewState
+> {
   // We need to keep track of all running requests, so we store a counter.
   private _nextRequestId = 1;
   // We also need to keep track of all the promises we created so we can
@@ -82,10 +92,31 @@ export class ArViewerView extends Component<ArInnerViewProps> {
 
   constructor(props: ArInnerViewProps) {
     super(props);
+    this.state = {
+      cameraPermission: Platform.OS !== 'android',
+    };
     this.nativeRef = createRef<typeof ArViewerComponent>();
     // bind methods to current context
     this._onDataReturned = this._onDataReturned.bind(this);
     this._onError = this._onError.bind(this);
+    this._onStarted = this._onStarted.bind(this);
+  }
+
+  componentDidMount() {
+    if (!this.state.cameraPermission) {
+      // asks permissions internally to correct a bug: https://github.com/SceneView/sceneview-android/issues/80
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA).then(
+        (granted) => {
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            this.setState({ cameraPermission: true });
+          } else {
+            this._onError({
+              nativeEvent: { message: 'Cannot start' },
+            } as ArErrorEvent);
+          }
+        }
+      );
+    }
   }
 
   _onDataReturned(event: ArEvent) {
@@ -111,6 +142,10 @@ export class ArViewerView extends Component<ArInnerViewProps> {
     // We grab the relevant data out of our event.
     const { message } = event.nativeEvent;
     console.warn(message);
+  }
+
+  _onStarted(_: ArStartedEvent) {
+    // we may run the onStarted prop
   }
 
   /**
@@ -156,12 +191,15 @@ export class ArViewerView extends Component<ArInnerViewProps> {
 
   render() {
     return (
-      <ArViewerComponent
-        ref={this.nativeRef}
-        onDataReturned={this._onDataReturned}
-        onError={this._onError}
-        {...this.props}
-      />
+      this.state.cameraPermission && (
+        <ArViewerComponent
+          ref={this.nativeRef}
+          onDataReturned={this._onDataReturned}
+          onError={this._onError}
+          onStarted={this._onStarted}
+          {...this.props}
+        />
+      )
     );
   }
 }

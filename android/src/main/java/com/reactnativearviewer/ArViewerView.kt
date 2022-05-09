@@ -1,6 +1,8 @@
 package com.reactnativearviewer
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
@@ -14,12 +16,15 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.google.ar.core.HitResult
 import io.github.sceneview.ar.ArSceneView
+import io.github.sceneview.ar.arcore.ArSession
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
 import io.github.sceneview.math.Position
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
 import java.io.ByteArrayOutputStream
+import java.lang.Thread.sleep
+
 
 open class ArViewerView @JvmOverloads constructor(
   context: Context,
@@ -45,6 +50,8 @@ open class ArViewerView @JvmOverloads constructor(
    * Set of allowed model transformations (rotate, scale, translate...)
    */
   private var allowTransform = mutableSetOf<EditableTransform>()
+
+
 
   /**
    * Start the loading of a GLB model URI
@@ -75,6 +82,9 @@ open class ArViewerView @JvmOverloads constructor(
       }
     )
     modelNode.editableTransforms = allowTransform
+
+
+    context.checkSelfPermission("CAMERA")
   }
 
   /**
@@ -117,6 +127,19 @@ open class ArViewerView @JvmOverloads constructor(
     returnErrorEvent(exception.message)
   }
 
+  override fun onArSessionCreated(session: ArSession) {
+    super.onArSessionCreated(session)
+    Log.d("ARview session", "started")
+    val event = Arguments.createMap()
+    val reactContext = context as ReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id,
+      "onStarted",
+      event
+    )
+    sleep(500)
+    arSession?.resume()
+  }
 
   /**
    * Hide the planeRenderer when a model is added to the scene
@@ -124,7 +147,9 @@ open class ArViewerView @JvmOverloads constructor(
   override fun onChildAdded(child: Node) {
     super.onChildAdded(child)
     try {
-      planeRenderer.isVisible = false
+      if (this::modelNode.isInitialized && modelNode.isAttached) {
+        planeRenderer.isVisible = false
+      }
     } catch (e: Exception) {
       Log.w("ARview planeRenderer", "failed turning invisible")
     }
@@ -136,7 +161,9 @@ open class ArViewerView @JvmOverloads constructor(
   override fun onChildRemoved(child: Node) {
     super.onChildRemoved(child)
     try {
-      planeRenderer.isVisible = true
+      if (this::modelNode.isInitialized && !modelNode.isAttached) {
+        planeRenderer.isVisible = true
+      }
     } catch (e: Exception) {
       Log.w("ARview planeRenderer", "failed turning visible")
     }
@@ -160,7 +187,6 @@ open class ArViewerView @JvmOverloads constructor(
     val anchor = hitResult.createAnchor()
     modelNode.anchor = anchor
   }
-
 
   /**
    * Prevent parent from treating a frame when the session was paused before unmount
