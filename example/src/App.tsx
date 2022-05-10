@@ -58,6 +58,7 @@ export default function App() {
           allowRotate
           allowTranslate
           disableInstantPlacement
+          disableInstructions
           ref={ref}
         />
       )}
