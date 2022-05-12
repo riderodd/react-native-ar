@@ -16,8 +16,12 @@ in your AndroidManifest.xml
 
 If you already have <meta-data android:name="com.google.ar.core" android:value="required" /> don't forget to add the tools:replace="android:value" attribute and check that your <manifest> tag contains xmlns:tools="http://schemas.android.com/tools" attribute
 
+## File formats
+The viewer only supports USDZ files for iOS and GLB for Android. Other formats may work, but are not officialy supported.
 
 ## Usage
+
+You should download your model locally using for example React Native File System in order to run the viewer on iOS. Android supports natively file URL (https:// instead of file://)
 
 ```js
 import { ArViewerView } from "react-native-ar-viewer";
@@ -26,16 +30,19 @@ import { Platform } from 'react-native';
 
 <ArViewerView 
     style={{flex: 1}}
-    model={Platform.OS === 'android' ? 'https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/Box/glTF-Binary/Box.glb?raw=true' : 'https://github.com/raphpap/assets/blob/master/egg.usdz?raw=true'}
+    model={Platform.OS === 'android' ? 'Box.glb' : 'dice.usdz'}
     lightEstimation
+    manageDepth
     allowRotate
     allowScale
     allowTranslate
     disableInstantPlacement
+    onStarted={() => console.log('started')}
+    onEnded={() => console.log('ended')}
+    onModelPlaced={() => console.log('model displayed')}
+    onModelRemoved={() => console.log('model not visible anymore')}
     planeOrientation="both" />
 ```
-
-### Customize instructions
 
 #### Android
 Add/Merge and customize the following lines in your android/src/main/res/values/strings.xml
