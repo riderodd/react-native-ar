@@ -674,7 +674,9 @@ class ModelARView: ARView, ARSessionDelegate {
             return
         }
         
-        self.showModel(grid: gridTapped, model: self.modelEntity)
+        if (self.modelEntity != nil) {
+            self.showModel(grid: gridTapped, model: self.modelEntity)
+        }
     }
 }
 

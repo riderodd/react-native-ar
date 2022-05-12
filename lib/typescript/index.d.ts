@@ -8,7 +8,7 @@ declare type ArEvent = SyntheticEvent<{}, {
 declare type ArErrorEvent = SyntheticEvent<{}, {
     message: string;
 }>;
-declare type ArStartedEvent = SyntheticEvent<{}, {}>;
+declare type ArStatelessEvent = SyntheticEvent<{}, {}>;
 declare type ArViewerProps = {
     model: string;
     planeOrientation?: 'none' | 'vertical' | 'horizontal' | 'both';
@@ -22,10 +22,13 @@ declare type ArViewerProps = {
     style?: ViewStyle;
     ref?: RefObject<HostComponent<ArViewerProps> | (() => never)>;
     onDataReturned: (e: ArEvent) => void;
-    onError: (e: ArErrorEvent) => void | undefined;
-    onStarted: (e: ArStartedEvent) => void | undefined;
+    onError?: (e: ArErrorEvent) => void | undefined;
+    onStarted?: (e: ArStatelessEvent) => void | undefined;
+    onEnded?: (e: ArStatelessEvent) => void | undefined;
+    onModelPlaced?: (e: ArStatelessEvent) => void | undefined;
+    onModelRemoved?: (e: ArStatelessEvent) => void | undefined;
 };
-declare type ArInnerViewProps = Omit<ArViewerProps, 'onDataReturned' | 'ref' | 'onError' | 'onStarted'>;
+declare type ArInnerViewProps = Omit<ArViewerProps, 'onDataReturned' | 'ref' | 'onError'>;
 declare type ArInnerViewState = {
     cameraPermission: boolean;
 };
@@ -37,7 +40,6 @@ export declare class ArViewerView extends Component<ArInnerViewProps, ArInnerVie
     componentDidMount(): void;
     _onDataReturned(event: ArEvent): void;
     _onError(event: ArErrorEvent): void;
-    _onStarted(_: ArStartedEvent): void;
     /**
      * Takes a full screenshot of the rendered camera
      * @returns A promise resolving a base64 encoded image
@@ -48,6 +50,11 @@ export declare class ArViewerView extends Component<ArInnerViewProps, ArInnerVie
      * @returns void
      */
     reset(): void;
+    /**
+     * Rotate the model
+     * @returns void
+     */
+    rotate(pitch: number, yaw: number, roll: number): void;
     render(): false | JSX.Element;
 }
 export {};
