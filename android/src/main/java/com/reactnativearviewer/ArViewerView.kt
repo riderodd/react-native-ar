@@ -13,6 +13,8 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.google.ar.core.HitResult
+import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.plus
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.arcore.ArSession
 import io.github.sceneview.ar.node.ArModelNode
@@ -86,8 +88,8 @@ open class ArViewerView @JvmOverloads constructor(
       }
     )
     modelNode.editableTransforms = allowTransform
-    modelNode.onDetachedFromScene.add { this.onChildRemoved(modelNode) }
     modelNode.name = "mainModel"
+    modelNode.onDetachedFromScene.add { this.onChildRemoved(modelNode) }
 
     context.checkSelfPermission("CAMERA")
   }
@@ -96,7 +98,8 @@ open class ArViewerView @JvmOverloads constructor(
    * Rotate the model with the requested angle
    */
   fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
-      this.modelNode.rotation = Rotation(pitch.toFloat(), yaw.toFloat(), roll.toFloat())
+      var rotation = modelNode.rotation.plus(Rotation(pitch.toFloat(), yaw.toFloat(), roll.toFloat()))
+      modelNode.modelRotation = rotation
   }
 
   /**
@@ -124,7 +127,6 @@ open class ArViewerView @JvmOverloads constructor(
    */
   fun removeAllowTransform(transform: EditableTransform) {
     allowTransform.remove(transform)
-    if (allowTransform.size == 0) allowTransform = EditableTransform.NONE as MutableSet<EditableTransform>
     if (this::modelNode.isInitialized) {
       modelNode.editableTransforms = allowTransform
     }

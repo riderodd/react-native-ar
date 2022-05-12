@@ -54,7 +54,7 @@ export default function App() {
   };
 
   const rotate = () => {
-    ref.current?.rotate(0, 180, 0);
+    ref.current?.rotate(0, -25, 0);
   };
 
   const mountUnMount = () => setShowArView(!showArView);
@@ -66,9 +66,6 @@ export default function App() {
           model={localModelPath}
           style={styles.arView}
           disableInstantPlacement
-          allowRotate
-          allowScale
-          allowTranslate
           onStarted={() => console.log('started')}
           onEnded={() => console.log('ended')}
           onModelPlaced={() => console.log('model displayed')}
