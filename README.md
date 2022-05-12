@@ -16,6 +16,9 @@ in your AndroidManifest.xml
 
 If you already have <meta-data android:name="com.google.ar.core" android:value="required" /> don't forget to add the tools:replace="android:value" attribute and check that your <manifest> tag contains xmlns:tools="http://schemas.android.com/tools" attribute
 
+### iOS
+Remember to add NSCameraUsageDescription entry in your Info.plist with a text explaining why you request camera permission
+
 ## File formats
 The viewer only supports USDZ files for iOS and GLB for Android. Other formats may work, but are not officialy supported.
 
