@@ -167,9 +167,7 @@ export class ArViewerView extends Component<
     this.nativeRef.current &&
       UIManager.dispatchViewManagerCommand(
         findNodeHandle(this.nativeRef.current as unknown as number),
-        (UIManager as ArViewUIManager)[
-          ComponentName
-        ].Commands.takeScreenshot,
+        (UIManager as ArViewUIManager)[ComponentName].Commands.takeScreenshot,
         [requestId]
       );
     return promise;
@@ -179,7 +177,7 @@ export class ArViewerView extends Component<
    * Reset the model positionning
    * @returns void
    */
-   reset() {
+  reset() {
     this.nativeRef.current &&
       UIManager.dispatchViewManagerCommand(
         findNodeHandle(this.nativeRef.current as unknown as number),
@@ -187,7 +185,6 @@ export class ArViewerView extends Component<
         []
       );
   }
-
 
   /**
    * Rotate the model
