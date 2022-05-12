@@ -16,18 +16,21 @@ export default function App() {
   const ref = React.useRef() as React.MutableRefObject<ArViewerView>;
 
   const loadPath = async () => {
-    const modelSrc = Platform.OS === 'android'
-    ? 'https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/Box/glTF-Binary/Box.glb?raw=true'
-    : 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.usdz?raw=true';
-    const modelPath = `${RNFS.DocumentDirectoryPath}/model.${Platform.OS === "android" ? "glb" : "usdz"}`;
+    const modelSrc =
+      Platform.OS === 'android'
+        ? 'https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/Box/glTF-Binary/Box.glb?raw=true'
+        : 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.usdz?raw=true';
+    const modelPath = `${RNFS.DocumentDirectoryPath}/model.${
+      Platform.OS === 'android' ? 'glb' : 'usdz'
+    }`;
     const exists = await RNFS.exists(modelPath);
     if (!exists) {
       await RNFS.downloadFile({
         fromUrl: modelSrc,
-        toFile: modelPath
+        toFile: modelPath,
       }).promise;
     }
-    
+
     setLocalModelPath(modelPath);
   };
 
