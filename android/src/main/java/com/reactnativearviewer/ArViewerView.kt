@@ -1,8 +1,6 @@
 package com.reactnativearviewer
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
@@ -20,6 +18,7 @@ import io.github.sceneview.ar.arcore.ArSession
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
 import io.github.sceneview.math.Position
+import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
 import java.io.ByteArrayOutputStream
@@ -51,8 +50,6 @@ open class ArViewerView @JvmOverloads constructor(
    */
   private var allowTransform = mutableSetOf<EditableTransform>()
 
-
-
   /**
    * Start the loading of a GLB model URI
    */
@@ -61,6 +58,13 @@ open class ArViewerView @JvmOverloads constructor(
       Log.d("ARview model", "detaching")
       modelNode.detachAnchor()
       modelNode.destroy()
+      val event = Arguments.createMap()
+      val reactContext = context as ReactContext
+      reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+        id,
+        "onModelRemoved",
+        event
+      )
     }
     Log.d("ARview model", "loading")
     modelSrc = src
@@ -82,9 +86,17 @@ open class ArViewerView @JvmOverloads constructor(
       }
     )
     modelNode.editableTransforms = allowTransform
-
+    modelNode.onDetachedFromScene.add { this.onChildRemoved(modelNode) }
+    modelNode.name = "mainModel"
 
     context.checkSelfPermission("CAMERA")
+  }
+
+  /**
+   * Rotate the model with the requested angle
+   */
+  fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
+      this.modelNode.rotation = Rotation(pitch.toFloat(), yaw.toFloat(), roll.toFloat())
   }
 
   /**
@@ -149,6 +161,7 @@ open class ArViewerView @JvmOverloads constructor(
    * Hide the planeRenderer when a model is added to the scene
    */
   override fun onChildAdded(child: Node) {
+    Log.d("ARview onChildAdded", "called")
     super.onChildAdded(child)
     try {
       if (this::modelNode.isInitialized && modelNode.isAttached) {
@@ -163,9 +176,10 @@ open class ArViewerView @JvmOverloads constructor(
    * how the planeRenderer when there is no model shown on the scene
    */
   override fun onChildRemoved(child: Node) {
+    Log.d("ARview onChildRemoved", "called")
     super.onChildRemoved(child)
     try {
-      if (this::modelNode.isInitialized && !modelNode.isAttached) {
+      if (child.name == "mainModel") {
         planeRenderer.isVisible = true
       }
     } catch (e: Exception) {
@@ -190,6 +204,13 @@ open class ArViewerView @JvmOverloads constructor(
     addChild(modelNode)
     val anchor = hitResult.createAnchor()
     modelNode.anchor = anchor
+    val event = Arguments.createMap()
+    val reactContext = context as ReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id,
+      "onModelPlaced",
+      event
+    )
   }
 
   /**

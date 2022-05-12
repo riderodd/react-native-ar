@@ -19,6 +19,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   companion object {
     const val COMMAND_SNAPSHOT = 1
     const val COMMAND_RESET = 2
+    const val COMMAND_ROTATE_MODEL = 3
   }
 
   /**
@@ -71,17 +72,18 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   override fun getCommandsMap(): Map<String, Int>? {
     return MapBuilder.of(
       "takeScreenshot", COMMAND_SNAPSHOT,
-      "reset", COMMAND_RESET
+      "reset", COMMAND_RESET,
+      "rotateModel", COMMAND_ROTATE_MODEL
     )
   }
 
   /**
    * Map methods calls to view methods
    */
-  override fun receiveCommand(view: ArViewerView, commandId: String?, @Nullable args: ReadableArray?) {
+  override fun receiveCommand(view: ArViewerView, commandId: Int, @Nullable args: ReadableArray?) {
     super.receiveCommand(view, commandId, args)
     Log.d("ARview receiveCommand", commandId.toString());
-    when (commandId!!.toInt()) {
+    when (commandId) {
       COMMAND_SNAPSHOT -> {
         if (args != null) {
           val requestId = args.getInt(0);
@@ -90,6 +92,14 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
       }
       COMMAND_RESET -> {
         view.resetModel()
+      }
+      COMMAND_ROTATE_MODEL -> {
+        if (args != null) {
+          val pitch = args.getInt(0);
+          val yaw = args.getInt(1);
+          val roll = args.getInt(2);
+          view.rotateModel(pitch, yaw, roll)
+        }
       }
     }
   }
@@ -101,7 +111,10 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
     return MapBuilder.of(
       "onDataReturned", MapBuilder.of("registrationName","onDataReturned"),
       "onError", MapBuilder.of("registrationName","onError"),
-      "onStarted", MapBuilder.of("registrationName","onStarted")
+      "onStarted", MapBuilder.of("registrationName","onStarted"),
+      "onEnded", MapBuilder.of("registrationName","onEnded"),
+      "onModelPlaced", MapBuilder.of("registrationName","onModelPlaced"),
+      "onModelRemoved", MapBuilder.of("registrationName","onModelRemoved")
     )
   }
 
