@@ -24,7 +24,7 @@ type ArEvent = SyntheticEvent<
   }
 >;
 type ArErrorEvent = SyntheticEvent<{}, { message: string }>;
-type ArStartedEvent = SyntheticEvent<{}, {}>;
+type ArStatelessEvent = SyntheticEvent<{}, {}>;
 
 type ArViewerProps = {
   model: string;
@@ -39,14 +39,18 @@ type ArViewerProps = {
   style?: ViewStyle;
   ref?: RefObject<HostComponent<ArViewerProps> | (() => never)>;
   onDataReturned: (e: ArEvent) => void;
-  onError: (e: ArErrorEvent) => void | undefined;
-  onStarted: (e: ArStartedEvent) => void | undefined;
+  onError?: (e: ArErrorEvent) => void | undefined;
+  onStarted?: (e: ArStatelessEvent) => void | undefined;
+  onEnded?: (e: ArStatelessEvent) => void | undefined;
+  onModelPlaced?: (e: ArStatelessEvent) => void | undefined;
+  onModelRemoved?: (e: ArStatelessEvent) => void | undefined;
 };
 
 type UIManagerArViewer = {
   Commands: {
     takeScreenshot: number;
     reset: number;
+    rotateModel: number;
   };
 };
 
@@ -56,7 +60,7 @@ type ArViewUIManager = UIManager & {
 
 type ArInnerViewProps = Omit<
   ArViewerProps,
-  'onDataReturned' | 'ref' | 'onError' | 'onStarted'
+  'onDataReturned' | 'ref' | 'onError'
 >;
 
 type ArInnerViewState = {
@@ -99,7 +103,6 @@ export class ArViewerView extends Component<
     // bind methods to current context
     this._onDataReturned = this._onDataReturned.bind(this);
     this._onError = this._onError.bind(this);
-    this._onStarted = this._onStarted.bind(this);
   }
 
   componentDidMount() {
@@ -144,10 +147,6 @@ export class ArViewerView extends Component<
     console.warn(message);
   }
 
-  _onStarted(_: ArStartedEvent) {
-    // we may run the onStarted prop
-  }
-
   /**
    * Takes a full screenshot of the rendered camera
    * @returns A promise resolving a base64 encoded image
@@ -170,7 +169,7 @@ export class ArViewerView extends Component<
         findNodeHandle(this.nativeRef.current as unknown as number),
         (UIManager as ArViewUIManager)[
           ComponentName
-        ].Commands.takeScreenshot.toString(),
+        ].Commands.takeScreenshot,
         [requestId]
       );
     return promise;
@@ -180,12 +179,26 @@ export class ArViewerView extends Component<
    * Reset the model positionning
    * @returns void
    */
-  reset() {
+   reset() {
     this.nativeRef.current &&
       UIManager.dispatchViewManagerCommand(
         findNodeHandle(this.nativeRef.current as unknown as number),
-        (UIManager as ArViewUIManager)[ComponentName].Commands.reset.toString(),
+        (UIManager as ArViewUIManager)[ComponentName].Commands.reset,
         []
+      );
+  }
+
+
+  /**
+   * Rotate the model
+   * @returns void
+   */
+  rotate(pitch: number, yaw: number, roll: number) {
+    this.nativeRef.current &&
+      UIManager.dispatchViewManagerCommand(
+        findNodeHandle(this.nativeRef.current as unknown as number),
+        (UIManager as ArViewUIManager)[ComponentName].Commands.rotateModel,
+        [pitch, yaw, roll]
       );
   }
 
@@ -196,7 +209,6 @@ export class ArViewerView extends Component<
           ref={this.nativeRef}
           onDataReturned={this._onDataReturned}
           onError={this._onError}
-          onStarted={this._onStarted}
           {...this.props}
         />
       )

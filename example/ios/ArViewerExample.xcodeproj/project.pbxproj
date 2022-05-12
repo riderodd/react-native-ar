@@ -163,8 +163,6 @@
 			dependencies = (
 			);
 			name = ArViewerExample;
-			packageProductDependencies = (
-			);
 			productName = ArViewerExample;
 			productReference = 13B07F961A680F5B00A75B9A /* ArViewerExample.app */;
 			productType = "com.apple.product-type.application";
@@ -196,8 +194,6 @@
 				Base,
 			);
 			mainGroup = 83CBB9F61A601CBA00E9B192;
-			packageReferences = (
-			);
 			productRefGroup = 83CBBA001A601CBA00E9B192 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -271,10 +267,12 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-ArViewerExample/Pods-ArViewerExample-resources.sh",
+				"${PODS_CONFIGURATION_BUILD_DIR}/ArViewer/ArViewerBundle.bundle",
 				"${PODS_CONFIGURATION_BUILD_DIR}/React-Core/AccessibilityResources.bundle",
 			);
 			name = "[CP] Copy Pods Resources";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/ArViewerBundle.bundle",
 				"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/AccessibilityResources.bundle",
 			);
 			runOnlyForDeploymentPostprocessing = 0;

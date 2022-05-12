@@ -16,13 +16,18 @@ export default function App() {
   const ref = React.useRef() as React.MutableRefObject<ArViewerView>;
 
   const loadPath = async () => {
-    const modelPath = (
-      await (Platform.OS === 'android'
-        ? {
-            path: 'https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/Box/glTF-Binary/Box.glb?raw=true',
-          }
-        : RNFS.stat(RNFS.MainBundlePath + '/assets/src/dice.usdz'))
-    )?.path;
+    const modelSrc = Platform.OS === 'android'
+    ? 'https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/Box/glTF-Binary/Box.glb?raw=true'
+    : 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.usdz?raw=true';
+    const modelPath = `${RNFS.DocumentDirectoryPath}/model.${Platform.OS === "android" ? "glb" : "usdz"}`;
+    const exists = await RNFS.exists(modelPath);
+    if (!exists) {
+      await RNFS.downloadFile({
+        fromUrl: modelSrc,
+        toFile: modelPath
+      }).promise;
+    }
+    
     setLocalModelPath(modelPath);
   };
 
@@ -45,6 +50,10 @@ export default function App() {
     ref.current?.reset();
   };
 
+  const rotate = () => {
+    ref.current?.rotate(0, 180, 0);
+  };
+
   const mountUnMount = () => setShowArView(!showArView);
 
   return (
@@ -53,12 +62,14 @@ export default function App() {
         <ArViewerView
           model={localModelPath}
           style={styles.arView}
-          lightEstimation
-          allowScale
-          allowRotate
-          allowTranslate
           disableInstantPlacement
-          disableInstructions
+          allowRotate
+          allowScale
+          allowTranslate
+          onStarted={() => console.log('started')}
+          onEnded={() => console.log('ended')}
+          onModelPlaced={() => console.log('model displayed')}
+          onModelRemoved={() => console.log('model not visible anymore')}
           ref={ref}
         />
       )}
@@ -72,6 +83,9 @@ export default function App() {
         <TouchableHighlight onPress={reset} style={styles.button}>
           <Text>Reset</Text>
         </TouchableHighlight>
+        <TouchableHighlight onPress={rotate} style={styles.button}>
+          <Text>Rotate</Text>
+        </TouchableHighlight>
       </View>
     </View>
   );
@@ -83,7 +97,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   arView: {
-    flex: 1,
+    flex: 2,
   },
   footer: {
     flex: 1,
