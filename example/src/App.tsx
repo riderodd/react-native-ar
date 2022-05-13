@@ -18,7 +18,7 @@ export default function App() {
   const loadPath = async () => {
     const modelSrc =
       Platform.OS === 'android'
-        ? 'https://github.com/KhronosGroup/glTF-Sample-Models/blob/master/2.0/Box/glTF-Binary/Box.glb?raw=true'
+        ? 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.glb?raw=true'
         : 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.usdz?raw=true';
     const modelPath = `${RNFS.DocumentDirectoryPath}/model.${
       Platform.OS === 'android' ? 'glb' : 'usdz'
