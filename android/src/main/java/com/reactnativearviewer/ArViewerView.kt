@@ -13,8 +13,8 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.google.ar.core.HitResult
-import dev.romainguy.kotlin.math.Float3
-import dev.romainguy.kotlin.math.plus
+import dev.romainguy.kotlin.math.Quaternion
+import dev.romainguy.kotlin.math.RotationsOrder
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.arcore.ArSession
 import io.github.sceneview.ar.node.ArModelNode
@@ -24,7 +24,6 @@ import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
 import java.io.ByteArrayOutputStream
-import java.lang.Thread.sleep
 
 
 open class ArViewerView @JvmOverloads constructor(
@@ -98,8 +97,9 @@ open class ArViewerView @JvmOverloads constructor(
    * Rotate the model with the requested angle
    */
   fun rotateModel(pitch: Number, yaw: Number, roll:Number) {
-      var rotation = modelNode.rotation.plus(Rotation(pitch.toFloat(), yaw.toFloat(), roll.toFloat()))
-      modelNode.modelRotation = rotation
+    Log.d("ARview rotateModel", "pitch: $pitch deg / yaw: $yaw deg / roll: $roll deg")
+    val rotationPercent = 1.0f
+    modelNode.modelQuaternion *= Quaternion.fromEuler(Rotation(x = pitch.toFloat(), y = yaw.toFloat(), z = roll.toFloat()), RotationsOrder.XYZ) * rotationPercent
   }
 
   /**
@@ -155,8 +155,6 @@ open class ArViewerView @JvmOverloads constructor(
       "onStarted",
       event
     )
-    sleep(500)
-    arSession?.resume()
   }
 
   /**
@@ -219,7 +217,7 @@ open class ArViewerView @JvmOverloads constructor(
    * Prevent parent from treating a frame when the session was paused before unmount
    */
   override fun doFrame(frameTime: FrameTime) {
-    if(arSession == null || arSession!!.isResumed) super.doFrame(frameTime)
+    if (arSession == null || arSession!!.isResumed) super.doFrame(frameTime)
   }
 
   /**

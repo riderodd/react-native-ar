@@ -148,9 +148,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   fun setPlaneOrientation(view: ArViewerView, lightEstimation: Boolean) {
     Log.d("ARview lightEstimation", lightEstimation.toString());
     if(lightEstimation) {
-      view.lightEstimationMode = LightEstimationMode.AMBIENT_INTENSITY;
+      view.lightEstimationMode = LightEstimationMode.AMBIENT_INTENSITY
     } else {
-      view.lightEstimationMode = LightEstimationMode.DISABLED
+      view.lightEstimationMode = LightEstimationMode.ENVIRONMENTAL_HDR
     }
   }
 
@@ -162,6 +162,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   fun setManageDepth(view: ArViewerView, manageDepth: Boolean) {
     Log.d("ARview manageDepth", manageDepth.toString());
     view.depthEnabled = manageDepth
+    view.isDepthOcclusionEnabled = manageDepth
   }
 
 
