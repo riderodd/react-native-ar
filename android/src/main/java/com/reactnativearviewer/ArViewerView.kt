@@ -22,6 +22,7 @@ import io.github.sceneview.ar.arcore.ArSession
 import io.github.sceneview.ar.interaction.ArSceneGestureDetector
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
+import io.github.sceneview.light.intensity
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.Node
@@ -210,7 +211,9 @@ open class ArViewerView @JvmOverloads constructor(
     }
     Log.d("ARview model", "attached")
     addChild(modelNode)
-    val anchor = hitResult.createAnchor()
+    // create an anchor on session instead of tracking
+    // https://developers.google.com/ar/develop/anchors#pick_an_anchor_context
+    val anchor = arSession?.createAnchor(hitResult.hitPose)
     modelNode.anchor = anchor
     val event = Arguments.createMap()
     val reactContext = context as ReactContext
