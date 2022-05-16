@@ -147,10 +147,10 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   @ReactProp(name = "lightEstimation")
   fun setPlaneOrientation(view: ArViewerView, lightEstimation: Boolean) {
     Log.d("ARview lightEstimation", lightEstimation.toString());
-    if(lightEstimation) {
+    if (lightEstimation) {
       view.lightEstimationMode = LightEstimationMode.AMBIENT_INTENSITY
     } else {
-      view.lightEstimationMode = LightEstimationMode.ENVIRONMENTAL_HDR
+      view.lightEstimationMode = LightEstimationMode.DISABLED
     }
   }
 

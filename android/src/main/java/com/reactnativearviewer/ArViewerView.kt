@@ -61,6 +61,7 @@ open class ArViewerView @JvmOverloads constructor(
   fun loadModel(src: String) {
     if (this::modelNode.isInitialized && modelNode.isAttached) {
       Log.d("ARview model", "detaching")
+      modelNode.anchor?.detach() // free up memory of anchor
       modelNode.detachAnchor()
       modelNode.destroy()
       val event = Arguments.createMap()
