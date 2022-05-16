@@ -13,10 +13,13 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
 import com.google.ar.core.HitResult
+import com.google.ar.core.Plane
+import com.google.ar.core.Trackable
 import dev.romainguy.kotlin.math.Quaternion
 import dev.romainguy.kotlin.math.RotationsOrder
 import io.github.sceneview.ar.ArSceneView
 import io.github.sceneview.ar.arcore.ArSession
+import io.github.sceneview.ar.interaction.ArSceneGestureDetector
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
 import io.github.sceneview.math.Position
@@ -86,9 +89,10 @@ open class ArViewerView @JvmOverloads constructor(
         returnErrorEvent("Cannot load the model: " + it.message)
       }
     )
-    modelNode.editableTransforms = allowTransform
     modelNode.name = "mainModel"
+    modelNode.onAttachedToScene.add { modelNode.editableTransforms = allowTransform }
     modelNode.onDetachedFromScene.add { this.onChildRemoved(modelNode) }
+    gestureDetector.nodeManipulator?.selectedNode = modelNode // preselect the model to transform it
 
     context.checkSelfPermission("CAMERA")
   }
@@ -199,7 +203,11 @@ open class ArViewerView @JvmOverloads constructor(
     if (this.children.contains(modelNode)) {
       return
     }
-
+    // Stop if not tapped inside a plane
+    val trackable: Trackable = hitResult.trackable
+    if (trackable !is Plane || !trackable.isPoseInPolygon(hitResult.hitPose)) {
+      return
+    }
     Log.d("ARview model", "attached")
     addChild(modelNode)
     val anchor = hitResult.createAnchor()
