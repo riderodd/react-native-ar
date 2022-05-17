@@ -3,7 +3,7 @@ package com.reactnativearviewer
 import android.content.Context
 import android.graphics.Bitmap
 import android.os.Handler
-import android.os.HandlerThread
+import android.os.Looper
 import android.util.AttributeSet
 import android.util.Base64
 import android.util.Log
@@ -12,6 +12,7 @@ import android.view.PixelCopy
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.uimanager.events.RCTEventEmitter
+import com.google.ar.core.Config
 import com.google.ar.core.HitResult
 import com.google.ar.core.Plane
 import com.google.ar.core.Trackable
@@ -22,12 +23,12 @@ import io.github.sceneview.ar.arcore.ArSession
 import io.github.sceneview.ar.interaction.ArSceneGestureDetector
 import io.github.sceneview.ar.node.ArModelNode
 import io.github.sceneview.ar.node.EditableTransform
-import io.github.sceneview.light.intensity
 import io.github.sceneview.math.Position
 import io.github.sceneview.math.Rotation
 import io.github.sceneview.node.Node
 import io.github.sceneview.utils.FrameTime
 import java.io.ByteArrayOutputStream
+import java.util.*
 
 
 open class ArViewerView @JvmOverloads constructor(
@@ -54,6 +55,42 @@ open class ArViewerView @JvmOverloads constructor(
    * Set of allowed model transformations (rotate, scale, translate...)
    */
   private var allowTransform = mutableSetOf<EditableTransform>()
+
+  /**
+   * Override default gesture detector for translation
+   */
+  override val gestureDetector: ArSceneGestureDetector by lazy {
+    ArSceneGestureDetector(
+      this,
+      nodeManipulator = ArViewerNodeManipulator(this),
+      listener = gestureListener
+    )
+  }
+
+  /**
+   * Set plane detection orientation
+   */
+  fun setPlaneDetection(planeOrientation: String) {
+    var nodeManipulator = this.gestureDetector.nodeManipulator as ArViewerNodeManipulator
+    when(planeOrientation) {
+      "horizontal" -> {
+        nodeManipulator.setAllowedPlaneTypes(EnumSet.of(Plane.Type.HORIZONTAL_UPWARD_FACING, Plane.Type.HORIZONTAL_DOWNWARD_FACING))
+        this.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
+      }
+      "vertical" -> {
+        this.planeFindingMode = Config.PlaneFindingMode.VERTICAL
+        nodeManipulator.setAllowedPlaneTypes(EnumSet.of(Plane.Type.VERTICAL))
+      }
+      "both" -> {
+        this.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+        nodeManipulator.setAllowedPlaneTypes(EnumSet.allOf(Plane.Type::class.java))
+      }
+      "none" -> {
+        this.planeFindingMode = Config.PlaneFindingMode.DISABLED
+        nodeManipulator.setAllowedPlaneTypes(EnumSet.allOf(Plane.Type::class.java)) // allow moving on everything
+      }
+    }
+  }
 
   /**
    * Start the loading of a GLB model URI
@@ -187,6 +224,7 @@ open class ArViewerView @JvmOverloads constructor(
     try {
       if (child.name == "mainModel") {
         planeRenderer.isVisible = true
+        gestureDetector.nodeManipulator?.selectedNode = null
       }
     } catch (e: Exception) {
       Log.w("ARview planeRenderer", "failed turning visible")
@@ -249,10 +287,8 @@ open class ArViewerView @JvmOverloads constructor(
       width, height,
       Bitmap.Config.ARGB_8888
     )
-    val handlerThread = HandlerThread("PixelCopier")
     var encodedImage: String? = null
     var encodedImageError: String? = null
-    handlerThread.start()
     PixelCopy.request(this, bitmap, { copyResult ->
       if (copyResult == PixelCopy.SUCCESS) {
         try {
@@ -268,8 +304,7 @@ open class ArViewerView @JvmOverloads constructor(
         }
         returnDataEvent(requestId, encodedImage, encodedImageError)
       }
-      handlerThread.quitSafely()
-    }, Handler(handlerThread.looper))
+    }, Handler(Looper.getMainLooper()))
   }
 
   /**

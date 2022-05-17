@@ -133,19 +133,14 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   @ReactProp(name = "planeOrientation")
   fun setPlaneOrientation(view: ArViewerView, planeOrientation: String) {
     Log.d("ARview planeOrientation", planeOrientation);
-    when(planeOrientation) {
-      "horizontal" -> view.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
-      "vertical" -> view.planeFindingMode = Config.PlaneFindingMode.VERTICAL
-      "both" -> view.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-      "none" -> view.planeFindingMode = Config.PlaneFindingMode.DISABLED
-    }
+    view.setPlaneDetection(planeOrientation)
   }
 
   /**
    * Optional: enable ARCode light estimation
    */
   @ReactProp(name = "lightEstimation")
-  fun setPlaneOrientation(view: ArViewerView, lightEstimation: Boolean) {
+  fun setLightEstimation(view: ArViewerView, lightEstimation: Boolean) {
     Log.d("ARview lightEstimation", lightEstimation.toString());
     if (lightEstimation) {
       view.lightEstimationMode = LightEstimationMode.AMBIENT_INTENSITY
