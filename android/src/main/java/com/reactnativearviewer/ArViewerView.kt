@@ -92,6 +92,10 @@ open class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  fun onDrop() {
+    super.onDetachedFromWindow()
+  }
+
   /**
    * Start the loading of a GLB model URI
    */
@@ -190,14 +194,14 @@ open class ArViewerView @JvmOverloads constructor(
    */
   override fun onArSessionCreated(session: ArSession) {
     super.onArSessionCreated(session)
-    Log.d("ARview session", "started")
-    val event = Arguments.createMap()
-    val reactContext = context as ReactContext
-    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
-      id,
-      "onStarted",
-      event
-    )
+      Log.d("ARview session", "started")
+      val event = Arguments.createMap()
+      val reactContext = context as ReactContext
+      reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+        id,
+        "onStarted",
+        event
+      )
   }
 
   /**
