@@ -40,6 +40,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   override fun onDropViewInstance(view: ArViewerView) {
     Log.d("ARview onDropViewInstance", "Stopping session");
     super.onDropViewInstance(view)
+    view.onDrop()
     val threadPause: Thread = object : Thread() {
       override fun run() {
         try {
