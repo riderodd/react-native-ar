@@ -11,16 +11,21 @@ npm install react-native-ar-viewer
 ### Android
 Required AR features:
 
-Add <meta-data android:name="com.google.ar.core" android:value="required" tools:replace="android:value" />
-in your AndroidManifest.xml
+- Add the following to your AndroidManifest.xml:
 
-If you already have <meta-data android:name="com.google.ar.core" android:value="required" /> don't forget to add the tools:replace="android:value" attribute and check that your <manifest> tag contains xmlns:tools="http://schemas.android.com/tools" attribute
+```xml
+<meta-data android:name="com.google.ar.core" android:value="required" tools:replace="android:value" />
+```
+
+- If you already have `<meta-data android:name="com.google.ar.core" android:value="required" />` don't forget to add the `tools:replace="android:value"` attribute.
+
+- Check that your `<manifest>` tag contains `xmlns:tools="http://schemas.android.com/tools"` attribute.
 
 ### iOS
-Remember to add NSCameraUsageDescription entry in your Info.plist with a text explaining why you request camera permission
+- Remember to add `NSCameraUsageDescription` entry in your Info.plist with a text explaining why you request camera permission.
 
 ## File formats
-The viewer only supports USDZ files for iOS and GLB for Android. Other formats may work, but are not officialy supported.
+The viewer only supports `USDZ` files for iOS and `GLB` for Android. Other formats may work, but are not officialy supported.
 
 ## Usage
 
@@ -47,7 +52,75 @@ import { Platform } from 'react-native';
     planeOrientation="both" />
 ```
 
-#### Android
+### Props
+
+| Prop | Type | Description |
+|---|---|---|
+| `lightEstimation`|| Enables ambient light estimation (see below) |
+| `manageDepth` || Enables depth and occlusion estimation (see below) |
+| `allowRotate` || Allows to rotate model |
+| `allowScale` || Allows to scale model |
+| `allowTranslate` || Allows to translate model |
+| `disableInstructions` || Disables instructions messages |
+| `disableInstantPlacement` || Disables placement on load |
+| `planeOrientation` | `horizontal`, `vertical`, `both` or `none` | Sets plane orientation (default: `both`) |
+
+#### lightEstimation:
+
+| With | Without |
+|---|---|
+|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/light.jpg)|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/no-light.jpg)|
+
+#### manageDepth:
+
+| With | Without |
+|---|---|
+|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/depth.jpg)|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/no-depth.jpg)|
+
+#### Others:
+
+| allowRotate | allowScale | planeOrientation: both |
+|---|---|---|
+|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/rotate.gif)|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/scale.gif)|![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/planeOrientation.gif)|
+
+### Events
+
+- `onError`
+- `onEnded`
+- `onModelPlaced`
+- `onModelRemoved`
+- `onDataReturned`
+
+### Commands
+
+Commands are sent using refs like the following example:
+
+```js
+  // ...
+  const ref = React.useRef() as React.MutableRefObject<ArViewerView>;
+  
+  const reset = () => {
+    ref.current?.reset();
+  };
+  
+  return (
+    <ArViewerView
+      model={yourModel}
+      allowRotate
+      allowScale
+      allowTranslate
+      ref={ref} />
+  );
+  // ...
+```
+
+| Command | Args | Description |
+|---|---|---|
+| `reset()` | `none` | Removes model from plane |
+| `rotate()` | `x, y, z` | Manually rotates the model using euler angles |
+| `takeScreenshot()` | `none` | Takes a screenshot of the current view (camera + model) |
+
+### Android
 Add/Merge and customize the following lines in your android/src/main/res/values/strings.xml
 ```
 <resources>
