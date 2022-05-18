@@ -7,9 +7,10 @@ import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.google.ar.core.Config
 import io.github.sceneview.ar.arcore.LightEstimationMode
+import io.github.sceneview.ar.getScene
 import io.github.sceneview.ar.node.EditableTransform
+import io.github.sceneview.light.isShadowCaster
 
 
 class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
@@ -217,5 +218,13 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   fun disableInstantPlacement(view: ArViewerView, isDisabled: Boolean) {
     Log.d("ARview disableInstantPlacement", isDisabled.toString());
     view.instantPlacementEnabled = !isDisabled
+  }
+
+  /**
+   * Optional: disable the model's shadows
+   */
+  @ReactProp(name = "disableShadows")
+  fun disableShadows(view: ArViewerView, isDisabled: Boolean) {
+    Log.d("ARview disableShadows", isDisabled.toString());
   }
 }
