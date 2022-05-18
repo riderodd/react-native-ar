@@ -36,7 +36,10 @@
   "keywords": [
     "react-native",
     "ios",
-    "android"
+    "android",
+    "arkit",
+    "arcore",
+    "ar"
   ],
   "repository": "https://github.com/riderodd/react-native-ar",
   "author": "riderodd <contact@jg-web.site> (https://www.jg-web.site/)",
