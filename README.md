@@ -38,7 +38,7 @@ import { Platform } from 'react-native';
 
 <ArViewerView 
     style={{flex: 1}}
-    model={Platform.OS === 'android' ? 'Box.glb' : 'dice.usdz'}
+    model={Platform.OS === 'android' ? 'dice.glb' : 'dice.usdz'}
     lightEstimation
     manageDepth
     allowRotate
@@ -54,16 +54,17 @@ import { Platform } from 'react-native';
 
 ### Props
 
-| Prop | Type | Description |
-|---|---|---|
-| `lightEstimation`|| Enables ambient light estimation (see below) |
-| `manageDepth` || Enables depth and occlusion estimation (see below) |
-| `allowRotate` || Allows to rotate model |
-| `allowScale` || Allows to scale model |
-| `allowTranslate` || Allows to translate model |
-| `disableInstructions` || Disables instructions messages |
-| `disableInstantPlacement` || Disables placement on load |
-| `planeOrientation` | `horizontal`, `vertical`, `both` or `none` | Sets plane orientation (default: `both`) |
+| Prop | Type | Description | Required |
+|---|---|---|---|
+| `model`| `string` | Enables ambient light estimation (see below) | Yes |
+| `lightEstimation`| `bool` | Enables ambient light estimation (see below) | No |
+| `manageDepth` | `bool` | Enables depth and occlusion estimation (see below) | No |
+| `allowRotate` | `bool` | Allows to rotate model | No |
+| `allowScale` | `bool` | Allows to scale model | No |
+| `allowTranslate` | `bool` | Allows to translate model | No |
+| `disableInstructions` | `bool` | Disables instructions messages | No |
+| `disableInstantPlacement` | `bool` | Disables placement on load | No |
+| `planeOrientation` | `"horizontal"`, `"vertical"`, `"both"` or `"none"` | Sets plane orientation (default: `both`) | No |
 
 #### lightEstimation:
 
@@ -85,13 +86,13 @@ import { Platform } from 'react-native';
 
 ### Events
 
-| Prop | Description |
-|---|---|
-| `onStarted` | Triggers on AR session started |
-| `onEnded` | Triggers on AR session ended |
-| `onModelPlaced` | Triggers when model is placed |
-| `onModelRemoved` | Triggers when model is removed |
-| `onError` | Triggers on any error |
+| Prop | Parameter | Description |
+|---|---|---|
+| `onStarted` | `none` | Triggers on AR session started |
+| `onEnded` | `none` | Triggers on AR session ended |
+| `onModelPlaced` | `none` | Triggers when model is placed |
+| `onModelRemoved` | `none` | Triggers when model is removed |
+| `onError` | `{ message: string }` | Triggers on any error and returns an object containing the error message |
 
 ### Commands
 
@@ -108,9 +109,6 @@ Commands are sent using refs like the following example:
   return (
     <ArViewerView
       model={yourModel}
-      allowRotate
-      allowScale
-      allowTranslate
       ref={ref} />
   );
   // ...
