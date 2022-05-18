@@ -85,11 +85,13 @@ import { Platform } from 'react-native';
 
 ### Events
 
-- `onError`
-- `onEnded`
-- `onModelPlaced`
-- `onModelRemoved`
-- `onDataReturned`
+| Prop | Description |
+|---|---|
+| `onStarted` | Triggers on AR session started |
+| `onEnded` | Triggers on AR session ended |
+| `onModelPlaced` | Triggers when model is placed |
+| `onModelRemoved` | Triggers when model is removed |
+| `onError` | Triggers on any error |
 
 ### Commands
 
@@ -114,15 +116,18 @@ Commands are sent using refs like the following example:
   // ...
 ```
 
-| Command | Args | Description |
-|---|---|---|
-| `reset()` | `none` | Removes model from plane |
-| `rotate()` | `x, y, z` | Manually rotates the model using euler angles |
-| `takeScreenshot()` | `none` | Takes a screenshot of the current view (camera + model) |
+| Command | Args | Return | Description |
+|---|---|---|---|
+| `reset()` | `none` | `void` | Removes model from plane |
+| `rotate()` | `x, y, z` | `void` | Manually rotates the model using `yaw as x`, `pitch as y` and `roll as z` in degrees |
+| `takeScreenshot()` | `none` | `Promise<String>` | Takes a screenshot of the current view (camera + model) and returns a base64 jpeg string as a promise |
 
-### Android
+### Translation instructions
+
+#### Android
+
 Add/Merge and customize the following lines in your android/src/main/res/values/strings.xml
-```
+```xml
 <resources>
     <string name="sceneview_searching_planes">Searching for surfaces...</string>
     <string name="sceneview_tap_on_surface">Tap on a surface to place an object.</string>
@@ -136,7 +141,6 @@ Add/Merge and customize the following lines in your android/src/main/res/values/
     <string name="sceneview_camera_permission_required">Camera permission required</string>
 </resources>
 ```
-
 
 ## Contributing
 
