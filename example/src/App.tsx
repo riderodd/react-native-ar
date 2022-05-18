@@ -71,6 +71,7 @@ export default function App() {
           allowRotate
           allowScale
           allowTranslate
+          disableShadows
           onStarted={() => console.log('started')}
           onEnded={() => console.log('ended')}
           onModelPlaced={() => console.log('model displayed')}
