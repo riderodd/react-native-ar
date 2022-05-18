@@ -11,6 +11,7 @@ RCT_EXPORT_VIEW_PROPERTY(lightEstimation, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(manageDepth, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(disableInstructions, BOOL)
 RCT_EXPORT_VIEW_PROPERTY(disableInstantPlacement, BOOL)
+RCT_EXPORT_VIEW_PROPERTY(disableShadows, BOOL)
 
 RCT_EXTERN_METHOD(reset:(nonnull NSNumber*) reactTag)
 RCT_EXTERN_METHOD(takeScreenshot:(nonnull NSNumber*)reactTag withRequestId:(nonnull NSNumber*)requestId)

@@ -45,6 +45,7 @@ import { Platform } from 'react-native';
     allowScale
     allowTranslate
     disableInstantPlacement
+    disableShadows
     onStarted={() => console.log('started')}
     onEnded={() => console.log('ended')}
     onModelPlaced={() => console.log('model displayed')}
@@ -63,6 +64,7 @@ import { Platform } from 'react-native';
 | `allowScale` | `bool` | Allows to scale model | No |
 | `allowTranslate` | `bool` | Allows to translate model | No |
 | `disableInstructions` | `bool` | Disables instructions messages | No |
+| `disableShadows` | `bool` | Disables model's shadows | No |
 | `disableInstantPlacement` | `bool` | Disables placement on load | No |
 | `planeOrientation` | `"horizontal"`, `"vertical"`, `"both"` or `"none"` | Sets plane orientation (default: `both`) | No |
 

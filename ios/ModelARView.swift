@@ -298,6 +298,19 @@ class ModelARView: ARView, ARSessionDelegate {
         }
     }
     
+    /// Enable/Disable shadows
+    func setShadowsVisibility(isVisible: Bool) {
+        if (isVisible) {
+            if (!renderOptions.contains(.disableGroundingShadows)) {
+                renderOptions.insert(.disableGroundingShadows)
+            }
+        } else {
+            if (renderOptions.contains(.disableGroundingShadows)) {
+                renderOptions.remove(.disableGroundingShadows)
+            }
+        }
+    }
+    
     // Set our events handlers
     /// Set on started event
     func setOnStartedHandler(handler: @escaping RCTDirectEventBlock) {

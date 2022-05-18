@@ -77,6 +77,10 @@ class RealityKitViewController: UIViewController {
         arView.setAllowScale(isEnabled: isAllowed)
     }
     
+    func setShadowsVisibility(isVisible: Bool) {
+        arView.setShadowsVisibility(isVisible: isVisible)
+    }
+    
     func run() {
         arView.readyToStart = true
         arView.start()

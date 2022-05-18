@@ -35,6 +35,7 @@ class ArViewerView: UIView {
             arViewController.changeAllowScale(isAllowed: allowScale)
             arViewController.changeAllowRotate(isAllowed: allowRotate)
             arViewController.changeAllowTranslate(isAllowed: allowTranslate)
+            arViewController.setShadowsVisibility(isVisible: !disableShadows)
             arViewController.changeModel(model: model)
             // set events
             if (onError != nil) {
@@ -130,6 +131,12 @@ class ArViewerView: UIView {
     @objc var allowTranslate: Bool = false {
       didSet {
           arViewController?.changeAllowTranslate(isAllowed: allowTranslate)
+      }
+    }
+    
+    @objc var disableShadows: Bool = false {
+      didSet {
+          arViewController?.setShadowsVisibility(isVisible: !disableShadows)
       }
     }
     

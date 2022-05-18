@@ -36,6 +36,7 @@ type ArViewerProps = {
   manageDepth?: boolean;
   disableInstructions?: boolean;
   disableInstantPlacement?: boolean;
+  disableShadows?: boolean;
   style?: ViewStyle;
   ref?: RefObject<HostComponent<ArViewerProps> | (() => never)>;
   onDataReturned: (e: ArEvent) => void;
