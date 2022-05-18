@@ -1,6 +1,6 @@
 {
   "name": "react-native-ar-viewer",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "AR viewer for react native that uses Sceneform on Android and ARKit on iOS",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
