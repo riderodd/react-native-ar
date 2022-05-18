@@ -16,6 +16,8 @@
     "react-native-ar-viewer.podspec",
     "!lib/typescript/example",
     "!android/build",
+    "!android/.gradle",
+    "!android/.idea",
     "!ios/build",
     "!**/__tests__",
     "!**/__fixtures__",
