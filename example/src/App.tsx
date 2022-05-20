@@ -54,7 +54,7 @@ export default function App() {
   };
 
   const rotate = () => {
-    ref.current?.rotate(0, 90, 0);
+    ref.current?.rotate(0, 25, 0);
   };
 
   const mountUnMount = () => setShowArView(!showArView);
@@ -67,7 +67,6 @@ export default function App() {
           style={styles.arView}
           disableInstantPlacement
           manageDepth
-          lightEstimation
           allowRotate
           allowScale
           allowTranslate

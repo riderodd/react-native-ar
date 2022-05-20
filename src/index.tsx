@@ -97,7 +97,7 @@ export class ArViewerView extends Component<
   constructor(props: ArInnerViewProps) {
     super(props);
     this.state = {
-      cameraPermission: Platform.OS !== 'android',
+      cameraPermission: true,
     };
     this.nativeRef = createRef<typeof ArViewerComponent>();
     // bind methods to current context
@@ -105,22 +105,6 @@ export class ArViewerView extends Component<
     this._onError = this._onError.bind(this);
   }
 
-  componentDidMount() {
-    if (!this.state.cameraPermission) {
-      // asks permissions internally to correct a bug: https://github.com/SceneView/sceneview-android/issues/80
-      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA).then(
-        (granted) => {
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            this.setState({ cameraPermission: true });
-          } else {
-            this._onError({
-              nativeEvent: { message: 'Cannot start' },
-            } as ArErrorEvent);
-          }
-        }
-      );
-    }
-  }
 
   _onDataReturned(event: ArEvent) {
     // We grab the relevant data out of our event.
