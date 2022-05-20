@@ -37,7 +37,6 @@ export declare class ArViewerView extends Component<ArInnerViewProps, ArInnerVie
     private _requestMap;
     private nativeRef;
     constructor(props: ArInnerViewProps);
-    componentDidMount(): void;
     _onDataReturned(event: ArEvent): void;
     _onError(event: ArErrorEvent): void;
     /**
