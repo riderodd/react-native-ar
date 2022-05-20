@@ -7,10 +7,6 @@ import com.facebook.react.common.MapBuilder
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
 import com.facebook.react.uimanager.annotations.ReactProp
-import com.google.ar.core.Config
-import io.github.sceneview.ar.arcore.LightEstimationMode
-import io.github.sceneview.ar.node.EditableTransform
-
 
 class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   /**
@@ -31,6 +27,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    * Create the view
    */
   override fun createViewInstance(reactContext: ThemedReactContext): ArViewerView {
+    Log.d("ARview createViewInstance", "Create view")
     return ArViewerView(reactContext)
   }
 
@@ -38,33 +35,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    * Pause the AR session when the view gets removed
    */
   override fun onDropViewInstance(view: ArViewerView) {
-    Log.d("ARview onDropViewInstance", "Stopping session");
+    Log.d("ARview onDropViewInstance", "Stopping session")
     super.onDropViewInstance(view)
     view.onDrop()
-    val threadPause: Thread = object : Thread() {
-      override fun run() {
-        try {
-          sleep(100)
-          view.arSession?.pause()
-        } catch (e: java.lang.Exception) {
-          e.printStackTrace()
-        }
-      }
-    }
-    val thread: Thread = object : Thread() {
-      override fun run() {
-        try {
-          threadPause.start()
-          sleep(500)
-          view.arSession?.close()
-        } catch (e: Exception) {
-          e.printStackTrace()
-        } finally {
-          Log.e("END_", "Finish")
-        }
-      }
-    }
-    thread.start()
   }
 
   /**
@@ -83,11 +56,11 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   override fun receiveCommand(view: ArViewerView, commandId: Int, @Nullable args: ReadableArray?) {
     super.receiveCommand(view, commandId, args)
-    Log.d("ARview receiveCommand", commandId.toString());
+    Log.d("ARview receiveCommand", commandId.toString())
     when (commandId) {
       COMMAND_SNAPSHOT -> {
         if (args != null) {
-          val requestId = args.getInt(0);
+          val requestId = args.getInt(0)
           view.takeScreenshot(requestId)
         }
       }
@@ -96,9 +69,9 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
       }
       COMMAND_ROTATE_MODEL -> {
         if (args != null) {
-          val pitch = args.getInt(0);
-          val yaw = args.getInt(1);
-          val roll = args.getInt(2);
+          val pitch = args.getInt(0)
+          val yaw = args.getInt(1)
+          val roll = args.getInt(2)
           view.rotateModel(pitch, yaw, roll)
         }
       }
@@ -124,8 +97,8 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "model")
   fun setModel(view: ArViewerView, model: String) {
-    Log.d("ARview model", model);
-    view.loadModel(model);
+    Log.d("ARview model", model)
+    view.loadModel(model)
   }
 
   /**
@@ -133,7 +106,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "planeOrientation")
   fun setPlaneOrientation(view: ArViewerView, planeOrientation: String) {
-    Log.d("ARview planeOrientation", planeOrientation);
+    Log.d("ARview planeOrientation", planeOrientation)
     view.setPlaneDetection(planeOrientation)
   }
 
@@ -142,12 +115,8 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "lightEstimation")
   fun setLightEstimation(view: ArViewerView, lightEstimation: Boolean) {
-    Log.d("ARview lightEstimation", lightEstimation.toString());
-    if (lightEstimation) {
-      view.lightEstimationMode = LightEstimationMode.AMBIENT_INTENSITY
-    } else {
-      view.lightEstimationMode = LightEstimationMode.DISABLED
-    }
+    Log.d("ARview lightEstimation", lightEstimation.toString())
+    view.setLightEstimationEnabled(lightEstimation)
   }
 
 
@@ -156,9 +125,8 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "manageDepth")
   fun setManageDepth(view: ArViewerView, manageDepth: Boolean) {
-    Log.d("ARview manageDepth", manageDepth.toString());
-    view.depthEnabled = manageDepth
-    view.isDepthOcclusionEnabled = manageDepth
+    Log.d("ARview manageDepth", manageDepth.toString())
+    view.setDepthManagementEnabled(manageDepth)
   }
 
 
@@ -167,11 +135,11 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "allowScale")
   fun setAllowScale(view: ArViewerView, allowScale: Boolean) {
-    Log.d("ARview allowScale", allowScale.toString());
-    if(allowScale) {
-      view.addAllowTransform(EditableTransform.SCALE)
+    Log.d("ARview allowScale", allowScale.toString())
+    if (allowScale) {
+      view.addAllowTransform("scale")
     } else {
-      view.removeAllowTransform(EditableTransform.SCALE)
+      view.removeAllowTransform("scale")
     }
   }
 
@@ -180,11 +148,11 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "allowTranslate")
   fun setAllowTranslate(view: ArViewerView, allowTranslate: Boolean) {
-    Log.d("ARview allowTranslate", allowTranslate.toString());
+    Log.d("ARview allowTranslate", allowTranslate.toString())
     if(allowTranslate) {
-      view.addAllowTransform(EditableTransform.POSITION)
+      view.addAllowTransform("translate")
     } else {
-      view.removeAllowTransform(EditableTransform.POSITION)
+      view.removeAllowTransform("translate")
     }
   }
 
@@ -193,11 +161,11 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "allowRotate")
   fun setAllowRotate(view: ArViewerView, allowRotate: Boolean) {
-    Log.d("ARview allowRotate", allowRotate.toString());
+    Log.d("ARview allowRotate", allowRotate.toString())
     if(allowRotate) {
-      view.addAllowTransform(EditableTransform.ROTATION)
+      view.addAllowTransform("rotate")
     } else {
-      view.removeAllowTransform(EditableTransform.ROTATION)
+      view.removeAllowTransform("rotate")
     }
   }
 
@@ -206,7 +174,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "disableInstructions")
   fun disableInstructions(view: ArViewerView, isDisabled: Boolean) {
-    Log.d("ARview setInstructions", isDisabled.toString());
+    Log.d("ARview setInstructions", isDisabled.toString())
     view.setInstructionsEnabled(!isDisabled)
   }
 
@@ -215,7 +183,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
    */
   @ReactProp(name = "disableInstantPlacement")
   fun disableInstantPlacement(view: ArViewerView, isDisabled: Boolean) {
-    Log.d("ARview disableInstantPlacement", isDisabled.toString());
-    view.instantPlacementEnabled = !isDisabled
+    Log.d("ARview disableInstantPlacement", isDisabled.toString())
+    view.setInstantPlacementEnabled(!isDisabled)
   }
 }
