@@ -6,7 +6,6 @@ import {
   ViewStyle,
   findNodeHandle,
   HostComponent,
-  PermissionsAndroid,
 } from 'react-native';
 
 const LINKING_ERROR =
@@ -104,7 +103,6 @@ export class ArViewerView extends Component<
     this._onDataReturned = this._onDataReturned.bind(this);
     this._onError = this._onError.bind(this);
   }
-
 
   _onDataReturned(event: ArEvent) {
     // We grab the relevant data out of our event.
