@@ -21,7 +21,12 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libArViewer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libArViewer.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		A991914D282C09B800714735 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = SOURCE_ROOT; };
+		A99CD060283BE1F900358CCD /* environment.skybox */ = {isa = PBXFileReference; lastKnownFileType = file.skybox; path = environment.skybox; sourceTree = "<group>"; };
+		A99CD061283BE1F900358CCD /* RealityKitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealityKitViewController.swift; sourceTree = "<group>"; };
+		A99CD062283BE1F900358CCD /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
+		A99CD063283BE1F900358CCD /* ArViewerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArViewerView.swift; sourceTree = "<group>"; };
+		A99CD064283BE1F900358CCD /* grid.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = grid.png; sourceTree = "<group>"; };
+		A99CD065283BE1F900358CCD /* ModelARView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelARView.swift; sourceTree = "<group>"; };
 		A9EEF9BD281A9150002E5249 /* ArViewerViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArViewerViewManager.swift; sourceTree = "<group>"; };
 		A9EEF9BE281A9150002E5249 /* ArViewerViewManager.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ArViewerViewManager.m; sourceTree = "<group>"; };
 		F4FF95D5245B92E700C19C63 /* ArViewer-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ArViewer-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -49,7 +54,12 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				A991914D282C09B800714735 /* Assets.xcassets */,
+				A99CD063283BE1F900358CCD /* ArViewerView.swift */,
+				A99CD060283BE1F900358CCD /* environment.skybox */,
+				A99CD064283BE1F900358CCD /* grid.png */,
+				A99CD062283BE1F900358CCD /* Grid.swift */,
+				A99CD065283BE1F900358CCD /* ModelARView.swift */,
+				A99CD061283BE1F900358CCD /* RealityKitViewController.swift */,
 				A9EEF9BE281A9150002E5249 /* ArViewerViewManager.m */,
 				A9EEF9BD281A9150002E5249 /* ArViewerViewManager.swift */,
 				F4FF95D5245B92E700C19C63 /* ArViewer-Bridging-Header.h */,

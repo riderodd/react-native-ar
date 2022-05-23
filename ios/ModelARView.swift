@@ -44,6 +44,8 @@ class ModelARView: ARView, ARSessionDelegate {
         self.autoresizingMask = [
             .flexibleWidth, .flexibleHeight
         ]
+        
+        renderOptions.insert(.disableAREnvironmentLighting)
         // Add coaching overlay
         coachingOverlay = ARCoachingOverlayView(frame: frame)
         // setup the instructions
@@ -62,9 +64,18 @@ class ModelARView: ARView, ARSessionDelegate {
         config.isLightEstimationEnabled = false
         if #available(iOS 13.4, *) {
             if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-                config.sceneReconstruction = .mesh
+                //config.sceneReconstruction = .mesh
             }
         }
+        
+        // load environment lighting from HDR file
+        let frameworkBundle = Bundle(for: ArViewerViewManager.self)
+        let bundleURL = frameworkBundle.resourceURL?.appendingPathComponent("ArViewerBundle.bundle")
+        let resourceBundle = Bundle(url: bundleURL!)
+        
+        let skyboxResource = try! EnvironmentResource.load(named: "ref", in: resourceBundle)
+        environment.lighting.resource = skyboxResource
+        
         self.config = config
         
         // manage session here

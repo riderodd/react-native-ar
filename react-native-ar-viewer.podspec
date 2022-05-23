@@ -13,10 +13,10 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "13.0" }
   s.source       = { :git => "https://github.com/riderodd/react-native-ar.git", :tag => "#{s.version}" }
 
-  s.source_files = "ios/**/*.{h,m,mm,swift}"
+  s.source_files = "ios/**/*.{h,m,mm,swift,xcodeproj}"
   
   s.resource_bundles = {
-    'ArViewerBundle' => ['ios/*.png']
+    'ArViewerBundle' => ['ios/*.png', 'ios/*.skybox/*']
   }
 
   s.dependency "React-Core"
