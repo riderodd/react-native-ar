@@ -28,7 +28,6 @@ import com.google.ar.sceneform.rendering.CameraStream
 import com.google.ar.sceneform.rendering.ModelRenderable
 import com.google.ar.sceneform.ux.BaseArFragment.OnSessionConfigurationListener
 import com.google.ar.sceneform.ux.FootprintSelectionVisualizer
-import com.google.ar.sceneform.ux.InstructionsController
 import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.ux.TransformationSystem
 import java.io.ByteArrayOutputStream
@@ -56,6 +55,10 @@ class ArViewerView @JvmOverloads constructor(
   private var sessionInitializationFailed = false
   private var sessionConfig: Config? = null
   private var arSession: Session? = null
+  private var isDepthManagementEnabled = false
+  private var isLightEstimationEnabled = false
+  private var isInstantPlacementEnabled = false
+  private var planeOrientationMode: String = "both"
 
   /**
    * Reminder to keep track of model loading state
@@ -101,13 +104,19 @@ class ArViewerView @JvmOverloads constructor(
 
       val session = Session(context)
       val config = Config(session)
-      config.depthMode = Config.DepthMode.DISABLED
-      config.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+
+      // Set plane orientation mode
+      updatePlaneDetection(config)
+      // Enable or not instant placement
+      updateInstantPlacement(config)
+      // Enable or not light estimation
+      updateLightEstimation(config)
+      // Enable or not depth management
+      updateDepthManagement(config)
+
       config.focusMode = Config.FocusMode.AUTO
       // Force the non-blocking mode for the session.
       config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-      config.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-      config.lightEstimationMode = Config.LightEstimationMode.DISABLED
       sessionConfig = config
       arSession = session
 
@@ -118,9 +127,8 @@ class ArViewerView @JvmOverloads constructor(
       resume()
 
       // Setup the instructions view.
-      val li = LayoutInflater.from(context.currentActivity)
-      instructionsController = InstructionsController(li, this)
-      instructionsController!!.setEnabled(InstructionsController.TYPE_PLANE_DISCOVERY, true)
+      instructionsController = InstructionsController(context, this);
+      instructionsController!!.setEnabled(true);
     }
   }
 
@@ -136,7 +144,7 @@ class ArViewerView @JvmOverloads constructor(
         sessionInitializationFailed = true
       }
       if (!sessionInitializationFailed) {
-        instructionsController?.isVisible = true
+        instructionsController?.setVisible(true)
       }
     }
   }
@@ -204,7 +212,6 @@ class ArViewerView @JvmOverloads constructor(
    */
   private fun onSessionConfigChanged(config: Config) {
     instructionsController?.setEnabled(
-      InstructionsController.TYPE_PLANE_DISCOVERY,
       config.planeFindingMode !== Config.PlaneFindingMode.DISABLED
     )
   }
@@ -235,9 +242,8 @@ class ArViewerView @JvmOverloads constructor(
     if (instructionsController != null) {
       // Instructions for the Plane finding mode.
       val showPlaneInstructions: Boolean = !arView!!.hasTrackedPlane()
-      if (instructionsController?.isVisible(InstructionsController.TYPE_PLANE_DISCOVERY) != showPlaneInstructions) {
+      if (instructionsController?.isVisible() != showPlaneInstructions) {
         instructionsController?.setVisible(
-          InstructionsController.TYPE_PLANE_DISCOVERY,
           showPlaneInstructions
         )
       }
@@ -313,57 +319,79 @@ class ArViewerView @JvmOverloads constructor(
    * Set plane detection orientation
    */
   fun setPlaneDetection(planeOrientation: String) {
+    planeOrientationMode = planeOrientation
     sessionConfig.let {
-      when (planeOrientation) {
-        "horizontal" -> {
-          sessionConfig?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
-        }
-        "vertical" -> {
-          sessionConfig?.planeFindingMode = Config.PlaneFindingMode.VERTICAL
-        }
-        "both" -> {
-          sessionConfig?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
-        }
-        "none" -> {
-          sessionConfig?.planeFindingMode = Config.PlaneFindingMode.DISABLED
-        }
-      }
+      updatePlaneDetection(sessionConfig)
       updateConfig()
+    }
+  }
+
+  private fun updatePlaneDetection(config: Config?) {
+    when (planeOrientationMode) {
+      "horizontal" -> {
+        config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
+      }
+      "vertical" -> {
+        config?.planeFindingMode = Config.PlaneFindingMode.VERTICAL
+      }
+      "both" -> {
+        config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+      }
+      "none" -> {
+        config?.planeFindingMode = Config.PlaneFindingMode.DISABLED
+      }
     }
   }
 
   fun setInstantPlacementEnabled(isEnabled: Boolean) {
+    isInstantPlacementEnabled = isEnabled
     sessionConfig.let {
-      if(!isEnabled) {
-        sessionConfig?.instantPlacementMode = Config.InstantPlacementMode.DISABLED
-      } else {
-        sessionConfig?.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-      }
+      updateInstantPlacement(sessionConfig)
       updateConfig()
+    }
+  }
+
+  private fun updateInstantPlacement(config: Config?) {
+    if(!isInstantPlacementEnabled) {
+      config?.instantPlacementMode = Config.InstantPlacementMode.DISABLED
+    } else {
+      config?.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
     }
   }
 
   fun setLightEstimationEnabled(isEnabled: Boolean) {
+    isLightEstimationEnabled = isEnabled
     sessionConfig.let {
-      if(!isEnabled) {
-        sessionConfig?.lightEstimationMode = Config.LightEstimationMode.DISABLED
-      } else {
-        sessionConfig?.lightEstimationMode = Config.LightEstimationMode.AMBIENT_INTENSITY
-      }
+      updateLightEstimation(sessionConfig)
       updateConfig()
     }
   }
 
+  private fun updateLightEstimation(config: Config?) {
+    if(!isLightEstimationEnabled) {
+      config?.lightEstimationMode = Config.LightEstimationMode.DISABLED
+    } else {
+      config?.lightEstimationMode = Config.LightEstimationMode.AMBIENT_INTENSITY
+    }
+  }
+
   fun setDepthManagementEnabled(isEnabled: Boolean) {
+    isDepthManagementEnabled = isEnabled
     sessionConfig.let {
-      if(!isEnabled) {
-        sessionConfig?.depthMode = Config.DepthMode.DISABLED
-        arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
-      } else if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
-        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
-        arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
-      }
+      updateDepthManagement(sessionConfig)
       updateConfig()
+    }
+  }
+
+  private fun updateDepthManagement(config: Config?) {
+    if (!isDepthManagementEnabled) {
+      sessionConfig?.depthMode = Config.DepthMode.DISABLED
+      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_DISABLED
+    } else {
+      if(arSession?.isDepthModeSupported(Config.DepthMode.AUTOMATIC) == true) {
+        sessionConfig?.depthMode = Config.DepthMode.AUTOMATIC
+      }
+      arView?.cameraStream?.depthOcclusionMode = CameraStream.DepthOcclusionMode.DEPTH_OCCLUSION_ENABLED
     }
   }
 
@@ -466,7 +494,7 @@ class ArViewerView @JvmOverloads constructor(
    * Enable/Disable instructions
    */
   fun setInstructionsEnabled(isEnabled: Boolean) {
-
+    instructionsController?.setEnabled(isEnabled)
   }
 
   /**

@@ -45,20 +45,4 @@ object CameraPermissionHelper {
       CAMERA_PERMISSION_CODE
     )
   }
-
-  /** Check to see if we need to show the rationale for this permission.  */
-  fun shouldShowRequestPermissionRationale(activity: Activity?): Boolean {
-    return ActivityCompat.shouldShowRequestPermissionRationale(
-      activity!!,
-      CAMERA_PERMISSION
-    )
-  }
-
-  /** Launch Application Setting to grant permission.  */
-  fun launchPermissionSettings(activity: Activity) {
-    val intent = Intent()
-    intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-    intent.data = Uri.fromParts("package", activity.packageName, null)
-    activity.startActivity(intent)
-  }
 }

@@ -6,6 +6,7 @@ import {
   ViewStyle,
   findNodeHandle,
   HostComponent,
+  PermissionsAndroid,
 } from 'react-native';
 
 const LINKING_ERROR =
@@ -96,12 +97,29 @@ export class ArViewerView extends Component<
   constructor(props: ArInnerViewProps) {
     super(props);
     this.state = {
-      cameraPermission: true,
+      cameraPermission: Platform.OS !== 'android',
     };
     this.nativeRef = createRef<typeof ArViewerComponent>();
     // bind methods to current context
     this._onDataReturned = this._onDataReturned.bind(this);
     this._onError = this._onError.bind(this);
+  }
+
+  componentDidMount() {
+    if (!this.state.cameraPermission) {
+      // asks permissions internally to correct a bug: https://github.com/SceneView/sceneview-android/issues/80
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA).then(
+        (granted) => {
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            this.setState({ cameraPermission: true });
+          } else {
+            this._onError({
+              nativeEvent: { message: 'Cannot start' },
+            } as ArErrorEvent);
+          }
+        }
+      );
+    }
   }
 
   _onDataReturned(event: ArEvent) {
