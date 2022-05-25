@@ -10,8 +10,11 @@ import android.os.Looper
 import android.util.AttributeSet
 import android.util.Base64
 import android.util.Log
-import android.view.*
+import android.view.GestureDetector
 import android.view.GestureDetector.SimpleOnGestureListener
+import android.view.MotionEvent
+import android.view.PixelCopy
+import android.view.ViewGroup
 import android.view.ViewTreeObserver.OnWindowFocusChangeListener
 import android.widget.FrameLayout
 import com.facebook.react.bridge.Arguments
@@ -31,6 +34,7 @@ import com.google.ar.sceneform.ux.FootprintSelectionVisualizer
 import com.google.ar.sceneform.ux.TransformableNode
 import com.google.ar.sceneform.ux.TransformationSystem
 import java.io.ByteArrayOutputStream
+import java.util.*
 
 
 class ArViewerView @JvmOverloads constructor(
@@ -39,7 +43,7 @@ class ArViewerView @JvmOverloads constructor(
   /**
    * We show only one model, let's store the ref here
    */
-  private var modelNode: TransformableNode? = null
+  private var modelNode: CustomTransformableNode? = null
   /**
    * Our main view that integrates with ARCore and renders a scene
    */
@@ -355,11 +359,9 @@ class ArViewerView @JvmOverloads constructor(
 
   private fun initAnchorNode(anchor: Anchor) {
     val anchorNode = AnchorNode(anchor)
+
     anchorNode.parent = arView!!.scene
     modelNode!!.parent = anchorNode
-
-    // Attach the model to the new anchor
-    arView!!.scene.addChild(anchorNode)
 
     // Animate if has animation
     val renderableInstance = modelNode?.renderableInstance
@@ -407,15 +409,31 @@ class ArViewerView @JvmOverloads constructor(
     when (planeOrientationMode) {
       "horizontal" -> {
         config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
+        if(modelNode != null) {
+          modelNode!!.translationController.allowedPlaneTypes.clear()
+          modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.HORIZONTAL_DOWNWARD_FACING)
+          modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.HORIZONTAL_UPWARD_FACING)
+        }
       }
       "vertical" -> {
         config?.planeFindingMode = Config.PlaneFindingMode.VERTICAL
+        if(modelNode != null) {
+          modelNode!!.translationController.allowedPlaneTypes.clear()
+          modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.VERTICAL)
+        }
       }
       "both" -> {
         config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL_AND_VERTICAL
+        if (modelNode != null) {
+          modelNode!!.translationController.allowedPlaneTypes.clear()
+          modelNode!!.translationController.allowedPlaneTypes = EnumSet.allOf(Plane.Type::class.java)
+        }
       }
       "none" -> {
         config?.planeFindingMode = Config.PlaneFindingMode.DISABLED
+        if (modelNode != null) {
+          modelNode!!.translationController.allowedPlaneTypes.clear()
+        }
       }
     }
   }
@@ -502,20 +520,15 @@ class ArViewerView @JvmOverloads constructor(
         .setIsFilamentGltf(true)
         .build()
         .thenAccept {
-          modelNode = TransformableNode(transformationSystem)
+          modelNode = CustomTransformableNode(transformationSystem!!)
           modelNode!!.select()
-
-          // to set local position in front of touch, let's create a node inside the anchor
-          val containerModel = Node()
-          containerModel.parent = modelNode
-          containerModel.renderable = it
-          containerModel.renderableInstance.filamentAsset?.let { asset ->
-            // center the model origin
-            val center = asset.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
+          modelNode!!.renderable = it
+          // set model at center
+          modelNode!!.renderableInstance.filamentAsset.let { asset ->
+            val center = asset!!.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
             val halfExtent = asset.boundingBox.halfExtent.let { v -> Float3(v[0], v[1], v[2]) }
-            val origin = Float3(0f, -1f, 1f)
-            val fCenter = -(center + halfExtent * origin) * Float3(1f, 1f, 1f)
-            containerModel.localPosition = Vector3(fCenter.x, fCenter.y, fCenter.z)
+            val fCenter = -(center + halfExtent * Float3(0f, -1f, 1f)) * Float3(1f, 1f, 1f)
+            modelNode!!.localPosition = Vector3(fCenter.x, fCenter.y, fCenter.z)
           }
 
           Log.d("ARview model", "loaded")
@@ -663,3 +676,5 @@ class ArViewerView @JvmOverloads constructor(
     return true
   }
 }
+
+
