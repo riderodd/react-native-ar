@@ -179,7 +179,7 @@ class ArViewerViewManager : SimpleViewManager<ArViewerView>() {
   }
 
   /**
-   * Optional: disable the text instructions
+   * Optional: disable instant placement
    */
   @ReactProp(name = "disableInstantPlacement")
   fun disableInstantPlacement(view: ArViewerView, isDisabled: Boolean) {

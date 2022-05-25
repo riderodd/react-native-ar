@@ -8,7 +8,7 @@ target 'ArViewerExample' do
 
   use_react_native!(:path => config["reactNativePath"])
 
-  pod 'ArViewer', :path => '../..'
+  pod 'react-native-ar-viewer', :path => '../..'
 
   # Enables Flipper.
   #

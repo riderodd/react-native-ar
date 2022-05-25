@@ -40,40 +40,89 @@ class ArViewerView @JvmOverloads constructor(
    * We show only one model, let's store the ref here
    */
   private var modelNode: TransformableNode? = null
+  /**
+   * Our main view that integrates with ARCore and renders a scene
+   */
   private var arView: ArSceneView? = null
-
-  private var canRequestDangerousPermissions = true
-
+  /**
+   * Event listener that triggers on focus
+   */
   private val onFocusListener = OnWindowFocusChangeListener { onWindowFocusChanged(it) }
+  /**
+   * Event listener that triggers when the ARCore Session is to be configured
+   */
   private val onSessionConfigurationListener: OnSessionConfigurationListener? = null
 
+  /**
+   * Main view state
+   */
   private var isStarted = false
-  private var instructionsController: InstructionsController? = null
-  private var transformationSystem: TransformationSystem? = null
-  private var gestureDetector: GestureDetector? = null
+  /**
+   * ARCore installation requirement state
+   */
   private var installRequested = false
+  /**
+   * Failed session initialization state
+   */
   private var sessionInitializationFailed = false
-  private var sessionConfig: Config? = null
-  private var arSession: Session? = null
+  /**
+   * Depth management enabled state
+   */
   private var isDepthManagementEnabled = false
+  /**
+   * Light estimation enabled state
+   */
   private var isLightEstimationEnabled = false
-  private var isInstantPlacementEnabled = false
+  /**
+   * Instant placement enabled state
+   */
+  private var isInstantPlacementEnabled = true
+  /**
+   * Plane orientation mode
+   */
   private var planeOrientationMode: String = "both"
-
+  /**
+   * Instructions enabled state
+   */
+  private var isInstructionsEnabled = true
+  /**
+   * Device supported state
+   */
+  private var isDeviceSupported = true
   /**
    * Reminder to keep track of model loading state
    */
   private var isLoading = false
+
+  /**
+   * Config of the main session initialization
+   */
+  private var sessionConfig: Config? = null
+  /**
+   * AR session initialization
+   */
+  private var arSession: Session? = null
+  /**
+   * Instructions controller initialization
+   */
+  private var instructionsController: InstructionsController? = null
+  /**
+   * Transformation system initialization
+   */
+  private var transformationSystem: TransformationSystem? = null
+  /**
+   * Gesture detector initialization
+   */
+  private var gestureDetector: GestureDetector? = null
+
   /**
    * Reminder to keep source of model loading
    */
   private var modelSrc: String = ""
-
   /**
    * Set of allowed model transformations (rotate, scale, translate...)
    */
   private var allowTransform = mutableSetOf<String>()
-
 
   init {
     if (checkIsSupportedDevice(context.currentActivity!!)) {
@@ -107,28 +156,31 @@ class ArViewerView @JvmOverloads constructor(
 
       // Set plane orientation mode
       updatePlaneDetection(config)
-      // Enable or not instant placement
-      updateInstantPlacement(config)
       // Enable or not light estimation
       updateLightEstimation(config)
       // Enable or not depth management
       updateDepthManagement(config)
 
+      // Sets the desired focus mode
       config.focusMode = Config.FocusMode.AUTO
       // Force the non-blocking mode for the session.
       config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+
       sessionConfig = config
       arSession = session
-
       arView!!.session?.configure(sessionConfig)
       arView!!.session = arSession
 
       initializeSession()
       resume()
 
+
+
       // Setup the instructions view.
       instructionsController = InstructionsController(context, this);
-      instructionsController!!.setEnabled(true);
+      instructionsController!!.setEnabled(isInstructionsEnabled);
+    } else {
+      isDeviceSupported = false
     }
   }
 
@@ -142,6 +194,7 @@ class ArViewerView @JvmOverloads constructor(
         arView!!.resume()
       } catch (ex: java.lang.Exception) {
         sessionInitializationFailed = true
+        returnErrorEvent("Could not resume session")
       }
       if (!sessionInitializationFailed) {
         instructionsController?.setVisible(true)
@@ -167,6 +220,7 @@ class ArViewerView @JvmOverloads constructor(
       val sessionException: UnavailableException?
       try {
         if (requestInstall()) {
+          returnErrorEvent("ARCore installation required")
           return
         }
         onSessionConfigurationListener?.onSessionConfiguration(arSession, sessionConfig)
@@ -191,7 +245,7 @@ class ArViewerView @JvmOverloads constructor(
       sessionInitializationFailed = true
       returnErrorEvent(sessionException?.message)
     } else {
-      requestDangerousPermissions()
+      returnErrorEvent("Missing camera permissions")
     }
   }
 
@@ -248,6 +302,22 @@ class ArViewerView @JvmOverloads constructor(
         )
       }
     }
+
+    if (isInstantPlacementEnabled && arView!!.arFrame?.camera?.trackingState == TrackingState.TRACKING) {
+      // Check if there is already an anchor
+      if (modelNode?.parent is AnchorNode) {
+        return
+      }
+
+      // Create the Anchor.
+      val pos = floatArrayOf(0f, 0f, -1f)
+      val rotation = floatArrayOf(0f, 0f, 0f, 1f)
+      val anchor: Anchor = arView!!.session!!.createAnchor(Pose(pos, rotation))
+      initAnchorNode(anchor)
+
+      // tells JS that the model is visible
+      onModelPlaced()
+    }
   }
 
   fun onSingleTap(motionEvent: MotionEvent?) {
@@ -267,38 +337,45 @@ class ArViewerView @JvmOverloads constructor(
                 modelAlreadyAttached = true
               }
 
-              // Create the Anchor.
+              // Create the Anchor
               val anchor: Anchor = arView!!.session!!.createAnchor(hitResult.hitPose)
-              val anchorNode = AnchorNode(anchor)
-              anchorNode.parent = arView!!.scene
-              modelNode!!.parent = anchorNode
-
-              // Attach the model to the new anchor
-              arView!!.scene.addChild(anchorNode)
-
-              // Animate if has animation
-              val renderableInstance = modelNode?.renderableInstance
-              if (renderableInstance != null && renderableInstance.hasAnimations()) {
-                renderableInstance.animate(true).start()
-              }
+              initAnchorNode(anchor)
 
               // tells JS that the model is visible
               if (!modelAlreadyAttached) {
-                val event = Arguments.createMap()
-                val reactContext = context as ThemedReactContext
-                reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
-                  id,
-                  "onModelPlaced",
-                  event
-                )
+                onModelPlaced()
               }
-
               break
             }
           }
         }
       }
     }
+  }
+
+  private fun initAnchorNode(anchor: Anchor) {
+    val anchorNode = AnchorNode(anchor)
+    anchorNode.parent = arView!!.scene
+    modelNode!!.parent = anchorNode
+
+    // Attach the model to the new anchor
+    arView!!.scene.addChild(anchorNode)
+
+    // Animate if has animation
+    val renderableInstance = modelNode?.renderableInstance
+    if (renderableInstance != null && renderableInstance.hasAnimations()) {
+      renderableInstance.animate(true).start()
+    }
+  }
+
+  private fun onModelPlaced() {
+    val event = Arguments.createMap()
+    val reactContext = context as ThemedReactContext
+    reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+      id,
+      "onModelPlaced",
+      event
+    )
   }
 
   /**
@@ -343,22 +420,16 @@ class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  /**
+   * Set whether instant placement is enabled
+   */
   fun setInstantPlacementEnabled(isEnabled: Boolean) {
     isInstantPlacementEnabled = isEnabled
-    sessionConfig.let {
-      updateInstantPlacement(sessionConfig)
-      updateConfig()
-    }
   }
 
-  private fun updateInstantPlacement(config: Config?) {
-    if(!isInstantPlacementEnabled) {
-      config?.instantPlacementMode = Config.InstantPlacementMode.DISABLED
-    } else {
-      config?.instantPlacementMode = Config.InstantPlacementMode.LOCAL_Y_UP
-    }
-  }
-
+  /**
+   * Set whether light estimation is enabled
+   */
   fun setLightEstimationEnabled(isEnabled: Boolean) {
     isLightEstimationEnabled = isEnabled
     sessionConfig.let {
@@ -375,6 +446,9 @@ class ArViewerView @JvmOverloads constructor(
     }
   }
 
+  /**
+   * Set whether depth management is enabled
+   */
   fun setDepthManagementEnabled(isEnabled: Boolean) {
     isDepthManagementEnabled = isEnabled
     sessionConfig.let {
@@ -405,47 +479,52 @@ class ArViewerView @JvmOverloads constructor(
    * Start the loading of a GLB model URI
    */
   fun loadModel(src: String) {
-    if (modelNode?.parent is AnchorNode) {
-      Log.d("ARview model", "detaching")
-      (modelNode!!.parent as AnchorNode).anchor?.detach() // free up memory of anchor
-      arView?.scene?.removeChild(modelNode)
-      modelNode = null
-      val event = Arguments.createMap()
-      val reactContext = context as ThemedReactContext
-      reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
-        id,
-        "onModelRemoved",
-        event
-      )
-    }
-    Log.d("ARview model", "loading")
-    modelSrc = src
-    isLoading = true
+    if (isDeviceSupported) {
+      if (modelNode?.parent is AnchorNode) {
+        Log.d("ARview model", "detaching")
+        (modelNode!!.parent as AnchorNode).anchor?.detach() // free up memory of anchor
+        arView?.scene?.removeChild(modelNode)
+        modelNode = null
+        val event = Arguments.createMap()
+        val reactContext = context as ThemedReactContext
+        reactContext.getJSModule(RCTEventEmitter::class.java).receiveEvent(
+          id,
+          "onModelRemoved",
+          event
+        )
+      }
+      Log.d("ARview model", "loading")
+      modelSrc = src
+      isLoading = true
 
-    ModelRenderable.builder()
-      .setSource(context, Uri.parse(src))
-      .setIsFilamentGltf(true)
-      .build()
-      .thenAccept {
-        modelNode = TransformableNode(transformationSystem)
-        modelNode!!.renderable = it
-        modelNode!!.select()
-        modelNode!!.renderableInstance.filamentAsset?.let { asset ->
-          // center the model origin
-          val center = asset.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
-          val halfExtent = asset.boundingBox.halfExtent.let { v -> Float3(v[0], v[1], v[2]) }
-          val origin = Float3(0f, -1f, 0f)
-          val fCenter = -(center + halfExtent * origin) * Float3(1f, 1f, 1f)
-          modelNode!!.localPosition = Vector3(fCenter.x, fCenter.y, fCenter.z)
+      ModelRenderable.builder()
+        .setSource(context, Uri.parse(src))
+        .setIsFilamentGltf(true)
+        .build()
+        .thenAccept {
+          modelNode = TransformableNode(transformationSystem)
+          modelNode!!.renderable = it
+          modelNode!!.select()
+          modelNode!!.renderableInstance.filamentAsset?.let { asset ->
+            // center the model origin
+            val center = asset.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
+            val halfExtent = asset.boundingBox.halfExtent.let { v -> Float3(v[0], v[1], v[2]) }
+            val origin = Float3(0f, -1f, 0f)
+            val fCenter = -(center + halfExtent * origin) * Float3(1f, 1f, 1f)
+            modelNode!!.localPosition = Vector3(fCenter.x, fCenter.y, fCenter.z)
+          }
+          Log.d("ARview model", "loaded")
+          isLoading = false
         }
-        Log.d("ARview model", "loaded")
-        isLoading = false
-      }
-      .exceptionally {
-        Log.e("ARview model", "cannot load")
-        returnErrorEvent("Cannot load the model: " + it.message)
-        return@exceptionally null
-      }
+        .exceptionally {
+          Log.e("ARview model", "cannot load")
+          returnErrorEvent("Cannot load the model: " + it.message)
+          return@exceptionally null
+        }
+    } else {
+      Log.e("ARview model", "This device is not supported")
+      returnErrorEvent("This device is not supported")
+    }
   }
 
   /**
@@ -489,12 +568,12 @@ class ArViewerView @JvmOverloads constructor(
     modelNode!!.translationController.isEnabled = allowTransform.contains("translate")
   }
 
-
   /**
    * Enable/Disable instructions
    */
   fun setInstructionsEnabled(isEnabled: Boolean) {
-    instructionsController?.setEnabled(isEnabled)
+    isInstructionsEnabled = isEnabled
+    instructionsController?.setEnabled(isInstructionsEnabled)
   }
 
   /**
@@ -557,7 +636,6 @@ class ArViewerView @JvmOverloads constructor(
     )
   }
 
-
   /**
    * Returns false and displays an error message if Sceneform can not run, true if Sceneform can run
    * on this device.
@@ -579,24 +657,4 @@ class ArViewerView @JvmOverloads constructor(
     }
     return true
   }
-
-  /**
-   * Starts the process of requesting dangerous permissions. This combines the CAMERA permission
-   * required of ARCore and any permissions returned from getAdditionalPermissions(). There is no
-   * specific processing on the result of the request, subclasses can override
-   * onRequestPermissionsResult() if additional processing is needed.
-   *
-   */
-  private fun requestDangerousPermissions() {
-    if (!canRequestDangerousPermissions) {
-      // If this is in progress, don't do it again.
-      return
-    }
-    canRequestDangerousPermissions = false
-
-    if (!CameraPermissionHelper.hasCameraPermission((context as ThemedReactContext).currentActivity)) {
-      CameraPermissionHelper.requestCameraPermission((context as ThemedReactContext).currentActivity)
-    }
-  }
-
 }

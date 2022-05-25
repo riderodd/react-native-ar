@@ -1,4 +1,5 @@
 # react-native-ar-viewer
+[![npm version](https://img.shields.io/npm/v/react-native-ar-viewer.svg)](https://www.npmjs.com/package/react-native-ar-viewer)
 
 AR viewer for react native that uses Sceneform on Android and ARKit on iOS
 
@@ -23,6 +24,8 @@ Required AR features:
 
 ### iOS
 - Remember to add `NSCameraUsageDescription` entry in your Info.plist with a text explaining why you request camera permission.
+
+- In XCode file tree, go to Pods > Development pods > react-native-ar-viewer, right-click on "Add Files to Pods"... Then select the environment.skybox folder in your node_modules/react-native-ar-viewer/ios folder. It should appear with a blue icon on the file tree. Check if res.hdr is present inside, if not, add it manually.
 
 ## File formats
 The viewer only supports `USDZ` files for iOS and `GLB` for Android. Other formats may work, but are not officialy supported.
@@ -119,26 +122,6 @@ Commands are sent using refs like the following example:
 | `reset()` | `none` | `void` | Removes model from plane |
 | `rotate()` | `x, y, z` | `void` | Manually rotates the model using `yaw as x`, `pitch as y` and `roll as z` in degrees |
 | `takeScreenshot()` | `none` | `Promise<String>` | Takes a screenshot of the current view (camera + model) and returns a base64 jpeg string as a promise |
-
-### Translation instructions
-
-#### Android
-
-Add/Merge and customize the following lines in your android/src/main/res/values/strings.xml
-```xml
-<resources>
-    <string name="sceneview_searching_planes">Searching for surfaces...</string>
-    <string name="sceneview_tap_on_surface">Tap on a surface to place an object.</string>
-    <string name="sceneview_insufficient_features_message">Can\'t find anything.\n\nAim device at a surface with more texture or color.</string>
-    <string name="sceneview_excessive_motion_message">Moving too fast.\n\nSlow down</string>
-    <string name="sceneview_insufficient_light_message">Too dark.\n\nTry moving to a well-lit area.</string>
-    <string name="sceneview_insufficient_light_android_s_message">Too dark. Try moving to a well-lit area.\n\nAlso, make sure the Block Camera is set to off in system settings.</string>
-    <string name="sceneview_bad_state_message">Tracking lost due to bad internal state.\n\nPlease try restarting the AR experience.</string>
-    <string name="sceneview_camera_unavailable_message">Another app is using the camera.\n\nTap on this app or try closing the other one.</string>
-    <string name="sceneview_unknown_tracking_failure">Unknown tracking failure reason: %1$s</string>
-    <string name="sceneview_camera_permission_required">Camera permission required</string>
-</resources>
-```
 
 ## Contributing
 
