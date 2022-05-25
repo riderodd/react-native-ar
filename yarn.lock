@@ -1805,9 +1805,9 @@
   version "15.7.5"
   resolved "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.5.tgz"
 
-"@types/react-native@^0.67.6":
-  version "0.67.6"
-  resolved "https://registry.npmjs.org/@types/react-native/-/react-native-0.67.6.tgz"
+"@types/react-native@^0.67.7":
+  version "0.67.7"
+  resolved "https://registry.yarnpkg.com/@types/react-native/-/react-native-0.67.7.tgz#903b7d56fb6a95ca0de897f2925c04ee0d4adee3"
   dependencies:
     "@types/react" "*"
 
@@ -6382,9 +6382,9 @@ plist@^3.0.2, plist@^3.0.5:
     base64-js "^1.5.1"
     xmlbuilder "^9.0.7"
 
-pod-install@^0.1.0:
-  version "0.1.33"
-  resolved "https://registry.npmjs.org/pod-install/-/pod-install-0.1.33.tgz"
+pod-install@^0.1.36:
+  version "0.1.36"
+  resolved "https://registry.yarnpkg.com/pod-install/-/pod-install-0.1.36.tgz#8090f57f76b42acf24c4325711bfa5730613fcab"
 
 posix-character-classes@^0.1.0:
   version "0.1.1"
