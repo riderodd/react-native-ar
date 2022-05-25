@@ -61,11 +61,11 @@ import { Platform } from 'react-native';
 |---|---|---|---|
 | `model`| `string` | Enables ambient light estimation (see below) | Yes |
 | `lightEstimation`| `bool` | Enables ambient light estimation (see below) | No |
-| `manageDepth` | `bool` | Enables depth and occlusion estimation (see below) | No |
+| `manageDepth` | `bool` | Enables depth estimation and occlusion (only iOS, see below) | No |
 | `allowRotate` | `bool` | Allows to rotate model | No |
 | `allowScale` | `bool` | Allows to scale model | No |
 | `allowTranslate` | `bool` | Allows to translate model | No |
-| `disableInstructions` | `bool` | Disables instructions messages | No |
+| `disableInstructions` | `bool` | Disables instructions view | No |
 | `disableInstantPlacement` | `bool` | Disables placement on load | No |
 | `planeOrientation` | `"horizontal"`, `"vertical"`, `"both"` or `"none"` | Sets plane orientation (default: `both`) | No |
 

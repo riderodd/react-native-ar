@@ -503,16 +503,21 @@ class ArViewerView @JvmOverloads constructor(
         .build()
         .thenAccept {
           modelNode = TransformableNode(transformationSystem)
-          modelNode!!.renderable = it
           modelNode!!.select()
-          modelNode!!.renderableInstance.filamentAsset?.let { asset ->
+
+          // to set local position in front of touch, let's create a node inside the anchor
+          val containerModel = Node()
+          containerModel.parent = modelNode
+          containerModel.renderable = it
+          containerModel.renderableInstance.filamentAsset?.let { asset ->
             // center the model origin
             val center = asset.boundingBox.center.let { v -> Float3(v[0], v[1], v[2]) }
             val halfExtent = asset.boundingBox.halfExtent.let { v -> Float3(v[0], v[1], v[2]) }
-            val origin = Float3(0f, -1f, 0f)
+            val origin = Float3(0f, -1f, 1f)
             val fCenter = -(center + halfExtent * origin) * Float3(1f, 1f, 1f)
-            modelNode!!.localPosition = Vector3(fCenter.x, fCenter.y, fCenter.z)
+            containerModel.localPosition = Vector3(fCenter.x, fCenter.y, fCenter.z)
           }
+
           Log.d("ARview model", "loaded")
           isLoading = false
         }
