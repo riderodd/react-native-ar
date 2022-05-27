@@ -64,7 +64,7 @@ class ModelARView: ARView, ARSessionDelegate {
         config.isLightEstimationEnabled = false
         if #available(iOS 13.4, *) {
             if ARWorldTrackingConfiguration.supportsSceneReconstruction(.mesh) {
-                //config.sceneReconstruction = .mesh
+                config.sceneReconstruction = .mesh
             }
         }
         
@@ -73,8 +73,13 @@ class ModelARView: ARView, ARSessionDelegate {
         let bundleURL = frameworkBundle.resourceURL?.appendingPathComponent("ArViewerBundle.bundle")
         let resourceBundle = Bundle(url: bundleURL!)
         
-        let skyboxResource = try! EnvironmentResource.load(named: "ref", in: resourceBundle)
-        environment.lighting.resource = skyboxResource
+        do {
+            let skyboxResource = try EnvironmentResource.load(named: "ref", in: resourceBundle)
+            environment.lighting.resource = skyboxResource
+        } catch {
+            let message = "Cannot load environment texture, please check installation guide. Models may appear darker than expected."
+            print(message)
+        }
         
         self.config = config
         

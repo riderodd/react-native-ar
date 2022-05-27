@@ -25,7 +25,8 @@ Required AR features:
 ### iOS
 - Remember to add `NSCameraUsageDescription` entry in your Info.plist with a text explaining why you request camera permission.
 
-- In XCode file tree, go to Pods > Development pods > react-native-ar-viewer, right-click on "Add Files to Pods"... Then select the environment.skybox folder in your node_modules/react-native-ar-viewer/ios folder. It should appear with a blue icon on the file tree. Check if res.hdr is present inside, if not, add it manually.
+- In XCode file tree, go to Pods > Development pods > react-native-ar-viewer, right-click on "Add Files to Pods"... Then select the environment.skybox folder in your node_modules/react-native-ar-viewer/ios folder. In add file window, check "react-native-ar-viewer-ARViewerBundle". It should appear with a blue icon on the file tree. Check if res.hdr is present inside, if not, add it manually. It should look like that:
+![](https://raw.githubusercontent.com/riderodd/react-native-ar/main/docs/mac-bundle-tree.png)
 
 ## File formats
 The viewer only supports `USDZ` files for iOS and `GLB` for Android. Other formats may work, but are not officialy supported.
