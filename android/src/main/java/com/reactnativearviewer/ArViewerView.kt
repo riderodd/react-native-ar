@@ -130,59 +130,63 @@ class ArViewerView @JvmOverloads constructor(
 
   init {
     if (checkIsSupportedDevice(context.currentActivity!!)) {
-      // let's create sceneform view
-      arView = ArSceneView(context, attrs)
-      arView!!.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-      this.addView(arView)
+      // check AR Core installation
+      if (requestInstall()) {
+        returnErrorEvent("ARCore installation required")
+        isDeviceSupported = false
+      } else {
+        // let's create sceneform view
+        arView = ArSceneView(context, attrs)
+        arView!!.layoutParams = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+        this.addView(arView)
 
-      transformationSystem = makeTransformationSystem()
+        transformationSystem = makeTransformationSystem()
 
-      gestureDetector = GestureDetector(
-        context,
-        object : SimpleOnGestureListener() {
-          override fun onSingleTapUp(e: MotionEvent): Boolean {
-            onSingleTap(e)
-            return true
-          }
+        gestureDetector = GestureDetector(
+          context,
+          object : SimpleOnGestureListener() {
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+              onSingleTap(e)
+              return true
+            }
 
-          override fun onDown(e: MotionEvent): Boolean {
-            return true
-          }
-        })
+            override fun onDown(e: MotionEvent): Boolean {
+              return true
+            }
+          })
 
-      arView!!.scene.addOnPeekTouchListener(this)
-      arView!!.scene.addOnUpdateListener(this)
-      arView!!.viewTreeObserver.addOnWindowFocusChangeListener(onFocusListener)
-      arView!!.setOnSessionConfigChangeListener(this::onSessionConfigChanged)
+        arView!!.scene.addOnPeekTouchListener(this)
+        arView!!.scene.addOnUpdateListener(this)
+        arView!!.viewTreeObserver.addOnWindowFocusChangeListener(onFocusListener)
+        arView!!.setOnSessionConfigChangeListener(this::onSessionConfigChanged)
 
-      val session = Session(context)
-      val config = Config(session)
+        val session = Session(context)
+        val config = Config(session)
 
-      // Set plane orientation mode
-      updatePlaneDetection(config)
-      // Enable or not light estimation
-      updateLightEstimation(config)
-      // Enable or not depth management
-      updateDepthManagement(config)
+        // Set plane orientation mode
+        updatePlaneDetection(config)
+        // Enable or not light estimation
+        updateLightEstimation(config)
+        // Enable or not depth management
+        updateDepthManagement(config)
 
-      // Sets the desired focus mode
-      config.focusMode = Config.FocusMode.AUTO
-      // Force the non-blocking mode for the session.
-      config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+        // Sets the desired focus mode
+        config.focusMode = Config.FocusMode.AUTO
+        // Force the non-blocking mode for the session.
+        config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
 
-      sessionConfig = config
-      arSession = session
-      arView!!.session?.configure(sessionConfig)
-      arView!!.session = arSession
+        sessionConfig = config
+        arSession = session
+        arView!!.session?.configure(sessionConfig)
+        arView!!.session = arSession
 
-      initializeSession()
-      resume()
+        initializeSession()
+        resume()
 
-
-
-      // Setup the instructions view.
-      instructionsController = InstructionsController(context, this);
-      instructionsController!!.setEnabled(isInstructionsEnabled);
+        // Setup the instructions view.
+        instructionsController = InstructionsController(context, this);
+        instructionsController!!.setEnabled(isInstructionsEnabled);
+      }
     } else {
       isDeviceSupported = false
     }
@@ -223,10 +227,6 @@ class ArViewerView @JvmOverloads constructor(
     if (CameraPermissionHelper.hasCameraPermission((context as ThemedReactContext).currentActivity)) {
       val sessionException: UnavailableException?
       try {
-        if (requestInstall()) {
-          returnErrorEvent("ARCore installation required")
-          return
-        }
         onSessionConfigurationListener?.onSessionConfiguration(arSession, sessionConfig)
 
         // run a JS event
@@ -409,7 +409,7 @@ class ArViewerView @JvmOverloads constructor(
     when (planeOrientationMode) {
       "horizontal" -> {
         config?.planeFindingMode = Config.PlaneFindingMode.HORIZONTAL
-        if(modelNode != null) {
+        if (modelNode != null) {
           modelNode!!.translationController.allowedPlaneTypes.clear()
           modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.HORIZONTAL_DOWNWARD_FACING)
           modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.HORIZONTAL_UPWARD_FACING)
@@ -417,7 +417,7 @@ class ArViewerView @JvmOverloads constructor(
       }
       "vertical" -> {
         config?.planeFindingMode = Config.PlaneFindingMode.VERTICAL
-        if(modelNode != null) {
+        if (modelNode != null) {
           modelNode!!.translationController.allowedPlaneTypes.clear()
           modelNode!!.translationController.allowedPlaneTypes.add(Plane.Type.VERTICAL)
         }
@@ -533,15 +533,15 @@ class ArViewerView @JvmOverloads constructor(
 
           Log.d("ARview model", "loaded")
           isLoading = false
+
+          // set transforms on model
+          onTransformChanged()
         }
         .exceptionally {
           Log.e("ARview model", "cannot load")
           returnErrorEvent("Cannot load the model: " + it.message)
           return@exceptionally null
         }
-    } else {
-      Log.e("ARview model", "This device is not supported")
-      returnErrorEvent("This device is not supported")
     }
   }
 
