@@ -6699,8 +6699,8 @@ plist@^3.0.2, plist@^3.0.5:
     xmlbuilder "^9.0.7"
 
 pod-install@^0.1.36:
-  version "0.1.36"
-  resolved "https://registry.yarnpkg.com/pod-install/-/pod-install-0.1.36.tgz#8090f57f76b42acf24c4325711bfa5730613fcab"
+  version "0.1.37"
+  resolved "https://registry.yarnpkg.com/pod-install/-/pod-install-0.1.37.tgz#6ec1cf08fd6259afae6b59136879a679d85a2249"
 
 posix-character-classes@^0.1.0:
   version "0.1.1"
