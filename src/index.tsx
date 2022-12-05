@@ -114,7 +114,9 @@ export class ArViewerView extends Component<
             this.setState({ cameraPermission: true });
           } else {
             this._onError({
-              nativeEvent: { message: 'Cannot start without camera permission' },
+              nativeEvent: {
+                message: 'Cannot start without camera permission',
+              },
             } as ArErrorEvent);
           }
         }
