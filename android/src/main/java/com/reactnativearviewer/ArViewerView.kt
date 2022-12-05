@@ -460,7 +460,7 @@ class ArViewerView @JvmOverloads constructor(
     if(!isLightEstimationEnabled) {
       config?.lightEstimationMode = Config.LightEstimationMode.DISABLED
     } else {
-      config?.lightEstimationMode = Config.LightEstimationMode.AMBIENT_INTENSITY
+      config?.lightEstimationMode = Config.LightEstimationMode.ENVIRONMENTAL_HDR
     }
   }
 
