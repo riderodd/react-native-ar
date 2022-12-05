@@ -1,15 +1,15 @@
 import { Component, RefObject, SyntheticEvent } from 'react';
 import { ViewStyle, HostComponent } from 'react-native';
-declare type ArEvent = SyntheticEvent<{}, {
+type ArEvent = SyntheticEvent<{}, {
     requestId: number | string;
     result: string;
     error: string;
 }>;
-declare type ArErrorEvent = SyntheticEvent<{}, {
+type ArErrorEvent = SyntheticEvent<{}, {
     message: string;
 }>;
-declare type ArStatelessEvent = SyntheticEvent<{}, {}>;
-declare type ArViewerProps = {
+type ArStatelessEvent = SyntheticEvent<{}, {}>;
+type ArViewerProps = {
     model: string;
     planeOrientation?: 'none' | 'vertical' | 'horizontal' | 'both';
     allowScale?: boolean;
@@ -28,8 +28,8 @@ declare type ArViewerProps = {
     onModelPlaced?: (e: ArStatelessEvent) => void | undefined;
     onModelRemoved?: (e: ArStatelessEvent) => void | undefined;
 };
-declare type ArInnerViewProps = Omit<ArViewerProps, 'onDataReturned' | 'ref' | 'onError'>;
-declare type ArInnerViewState = {
+type ArInnerViewProps = Omit<ArViewerProps, 'onDataReturned' | 'ref' | 'onError'>;
+type ArInnerViewState = {
     cameraPermission: boolean;
 };
 export declare class ArViewerView extends Component<ArInnerViewProps, ArInnerViewState> {
