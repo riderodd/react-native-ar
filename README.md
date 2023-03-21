@@ -1,4 +1,4 @@
-# react-native-ar-viewer
+# React Native AR Viewer
 [![npm version](https://img.shields.io/npm/v/react-native-ar-viewer.svg)](https://www.npmjs.com/package/react-native-ar-viewer)
 
 AR viewer for react native that uses Sceneform on Android and ARKit on iOS
