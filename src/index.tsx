@@ -108,19 +108,25 @@ export class ArViewerView extends Component<
   componentDidMount() {
     if (!this.state.cameraPermission) {
       // asks permissions internally to correct a bug: https://github.com/SceneView/sceneview-android/issues/80
-      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA).then(
-        (granted) => {
-          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-            this.setState({ cameraPermission: true });
-          } else {
-            this._onError({
-              nativeEvent: {
-                message: 'Cannot start without camera permission',
-              },
-            } as ArErrorEvent);
-          }
+      PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.CAMERA, {
+        title: 'Cool Photo App Camera Permission',
+        message:
+          'Cool Photo App needs access to your camera ' +
+          'so you can take awesome pictures.',
+        buttonNeutral: 'Ask Me Later',
+        buttonNegative: 'Cancel',
+        buttonPositive: 'OK',
+      }).then((granted) => {
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          this.setState({ cameraPermission: true });
+        } else {
+          this._onError({
+            nativeEvent: {
+              message: 'Cannot start without camera permission',
+            },
+          } as ArErrorEvent);
         }
-      );
+      });
     }
   }
 

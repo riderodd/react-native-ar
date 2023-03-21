@@ -287,7 +287,7 @@ class ArViewerView @JvmOverloads constructor(
    */
   override fun onPeekTouch(hitTestResult: HitTestResult, motionEvent: MotionEvent?) {
     transformationSystem!!.onTouch(hitTestResult, motionEvent)
-    if (hitTestResult.node == null) {
+    if (hitTestResult.node == null && motionEvent != null) {
       gestureDetector!!.onTouchEvent(motionEvent)
     }
   }
