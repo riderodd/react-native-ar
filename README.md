@@ -12,13 +12,18 @@ npm install react-native-ar-viewer
 ### Android
 Required AR features:
 
-- Add the following to your AndroidManifest.xml:
+- Add `com.google.ar.core` meta data to your `AndroidManifest.xml` as follows:
 
 ```xml
-<meta-data android:name="com.google.ar.core" android:value="required" tools:replace="android:value" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+  ...
+  <application>
+    ...
+    <meta-data android:name="com.google.ar.core" android:value="required" tools:replace="android:value" />
+  </application>
+  ...
+</manifest>
 ```
-
-- If you already have `<meta-data android:name="com.google.ar.core" android:value="required" />` don't forget to add the `tools:replace="android:value"` attribute.
 
 - Check that your `<manifest>` tag contains `xmlns:tools="http://schemas.android.com/tools"` attribute.
 
