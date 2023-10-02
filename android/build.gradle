@@ -74,7 +74,7 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "com.gorisse.thomas.sceneform:sceneform:1.21.0"
+  implementation "com.gorisse.thomas.sceneform:sceneform:1.23.0"
 }
 
 if (isNewArchitectureEnabled()) {
