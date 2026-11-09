@@ -1,6 +1,6 @@
 {
   "name": "react-native-ar-viewer",
-  "version": "0.1.17",
+  "version": "1.0.0",
   "description": "AR viewer for react native that uses SceneView (ARCore) on Android and ARKit on iOS",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
