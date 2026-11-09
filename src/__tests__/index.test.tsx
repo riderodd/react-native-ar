@@ -53,12 +53,8 @@ describe('ArViewerView', () => {
     view.rotate(1, 2, 3);
     view.reset();
 
-    expect(Commands.rotateModel).toHaveBeenCalledWith(
-      expect.anything(),
-      1,
-      2,
-      3
-    );
+    const [, ...angles] = jest.mocked(Commands.rotateModel).mock.calls[0]!;
+    expect(angles).toEqual([1, 2, 3]);
     expect(Commands.reset).toHaveBeenCalled();
   });
 });
