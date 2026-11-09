@@ -13,6 +13,9 @@ class ArViewerEvent(
 
   override fun getEventData() = payload
 
+  // Each screenshot response must reach JS, so events are never merged
+  override fun canCoalesce() = false
+
   companion object {
     const val DATA_RETURNED = "onDataReturned"
     const val ERROR = "onError"
