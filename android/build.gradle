@@ -38,5 +38,5 @@ android {
 dependencies {
   implementation "com.facebook.react:react-android"
   implementation "io.github.sceneview:arsceneview:${getExtOrDefault("sceneViewVersion")}"
-  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0"
 }
