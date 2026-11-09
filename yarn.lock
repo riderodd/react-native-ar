@@ -9510,7 +9510,7 @@ __metadata:
     typescript: "npm:^6.0.3"
   peerDependencies:
     react: "*"
-    react-native: ">=0.79.0"
+    react-native: ">=0.80.0"
   dependenciesMeta:
     lefthook:
       built: true
