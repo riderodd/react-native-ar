@@ -8,10 +8,11 @@ class ModelARView: ARView, ARSessionDelegate {
     var grids = [Grid]()
     var isModelVisible: Bool = false {
         didSet {
-            if (isModelVisible && self.onModelPlacedHandler != nil) {
-                self.onModelPlacedHandler([:])
-            } else if(!isModelVisible && self.onModelRemovedHandler != nil) {
-                self.onModelRemovedHandler([:])
+            guard isModelVisible != oldValue else { return }
+            if isModelVisible {
+                onModelPlacedHandler?([:])
+            } else {
+                onModelRemovedHandler?([:])
             }
         }
     }
@@ -23,12 +24,12 @@ class ModelARView: ARView, ARSessionDelegate {
     var readyToStart: Bool = false
     var sessionStarted: Bool = false
     
-    var onStartedHandler: RCTDirectEventBlock!
-    var onErrorHandler: RCTDirectEventBlock!
-    var onDataReturnedHandler: RCTDirectEventBlock!
-    var onEndedHandler: RCTDirectEventBlock!
-    var onModelPlacedHandler: RCTDirectEventBlock!
-    var onModelRemovedHandler: RCTDirectEventBlock!
+    var onStartedHandler: ArEventHandler?
+    var onErrorHandler: ArEventHandler?
+    var onDataReturnedHandler: ArEventHandler?
+    var onEndedHandler: ArEventHandler?
+    var onModelPlacedHandler: ArEventHandler?
+    var onModelRemovedHandler: ArEventHandler?
     
     required init(frame: CGRect) {
         super.init(frame: frame)
@@ -69,7 +70,7 @@ class ModelARView: ARView, ARSessionDelegate {
         }
         
         // load environment lighting from HDR file
-        let frameworkBundle = Bundle(for: ArViewerViewManager.self)
+        let frameworkBundle = Bundle(for: ModelARView.self)
         let bundleURL = frameworkBundle.resourceURL?.appendingPathComponent("ArViewerBundle.bundle")
         let resourceBundle = Bundle(url: bundleURL!)
         
@@ -123,9 +124,7 @@ class ModelARView: ARView, ARSessionDelegate {
             self.session.run(self.config)
             if(!sessionStarted) {
                 sessionStarted = true
-                if (onStartedHandler != nil) {
-                    onStartedHandler([:])
-                }
+                onStartedHandler?([:])
             }
         }
     }
@@ -134,10 +133,9 @@ class ModelARView: ARView, ARSessionDelegate {
     /// Pause the AR session
     func pause() {
         self.session.pause()
+        guard sessionStarted else { return }
         sessionStarted = false
-        if (onEndedHandler != nil) {
-            onEndedHandler([:])
-        }
+        onEndedHandler?([:])
     }
     
     
@@ -164,17 +162,13 @@ class ModelARView: ARView, ARSessionDelegate {
     
     
     func takeSnapshot(requestId: Int) {
-        snapshot(saveToHDR: false) { (image) in
-            let imageString = image?.jpegData(compressionQuality: 1)?.base64EncodedString() ?? ""
-            if (self.onDataReturnedHandler != nil) {
-                self.onDataReturnedHandler([
-                    "requestId": requestId,
-                    "result": imageString,
-                    "error": ""
-                ])
-            } else if(self.onErrorHandler != nil) {
-                self.onErrorHandler(["message": "No data handler found to return the snapshot"])
-            }
+        snapshot(saveToHDR: false) { [weak self] image in
+            let imageString = image?.jpegData(compressionQuality: 1)?.base64EncodedString()
+            self?.onDataReturnedHandler?([
+                "requestId": requestId,
+                "result": imageString ?? "",
+                "error": imageString == nil ? "Cannot capture the AR view" : ""
+            ])
         }
     }
     
@@ -297,12 +291,12 @@ class ModelARView: ARView, ARSessionDelegate {
     
     
     /// Converts degrees to radians
-    func deg2rad(_ number: Int) -> Float {
-        return Float(number) * .pi / 180
+    func deg2rad(_ number: Float) -> Float {
+        return number * .pi / 180
     }
     
     /// Rotate the model
-    func rotateModel(pitch: Int, yaw: Int, roll: Int) -> Void {
+    func rotateModel(pitch: Float, yaw: Float, roll: Float) {
         guard isModelVisible else { return }
         for plane in self.grids {
             if (plane.isShowingModel) {
@@ -312,37 +306,6 @@ class ModelARView: ARView, ARSessionDelegate {
                 plane.move(to: calculated, relativeTo: nil, duration: 1)
             }
         }
-    }
-    
-    // Set our events handlers
-    /// Set on started event
-    func setOnStartedHandler(handler: @escaping RCTDirectEventBlock) {
-        onStartedHandler = handler
-    }
-    
-    /// Set on error event
-    func setOnErrorHandler(handler: @escaping RCTDirectEventBlock) {
-        onErrorHandler = handler
-    }
-    
-    /// Set on data returned handler (used to resolve promises on JS side)
-    func setOnDataReturnedHandler(handler: @escaping RCTDirectEventBlock) {
-        onDataReturnedHandler = handler
-    }
-    
-    /// Set on ended event
-    func setOnEndedHandler(handler: @escaping RCTDirectEventBlock) {
-        onEndedHandler = handler
-    }
-    
-    /// Set on model placed handler
-    func setOnModelPlacedHandler(handler: @escaping RCTDirectEventBlock) {
-        onModelPlacedHandler = handler
-    }
-    
-    /// Set on model removed handler
-    func setOnModelRemovedHandler(handler: @escaping RCTDirectEventBlock) {
-        onModelRemovedHandler = handler
     }
     
     /// Add a grid when an new anchor is found
