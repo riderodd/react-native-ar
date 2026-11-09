@@ -1,4 +1,4 @@
-# Publishes the package to npm when a GitHub release is created
+# Stages the package on npm when a GitHub release is created; a maintainer approves it with 2FA
 name: Node.js Package
 
 on:
@@ -6,7 +6,7 @@ on:
     types: [created]
 
 jobs:
-  publish-npm:
+  stage-npm:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,7 +24,8 @@ jobs:
           node-version-file: .nvmrc
           registry-url: https://registry.npmjs.org/
 
-      - name: Publish
-        run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Build package
+        run: yarn prepare
+
+      - name: Stage publish
+        run: npm stage publish --provenance

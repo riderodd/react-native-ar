@@ -92,11 +92,18 @@ Our pre-commit hooks verify that your commit message matches this format when co
 
 We use [release-it](https://github.com/release-it/release-it) to make it easier to publish new versions. It handles common tasks like bumping version based on semver, creating tags and releases etc.
 
-To publish new versions, run the following:
+To publish a new version:
+
+1. Run `yarn release`. It bumps the version, tags it and creates the GitHub release.
+2. The release triggers the `Node.js Package` workflow, which stages the version on npm through trusted publishing (no npm token is stored in the repository).
+3. Approve the staged version with 2FA, on npmjs.com or from the command line:
 
 ```sh
-yarn release
+npm stage list react-native-ar-viewer
+npm stage approve <stage-id>
 ```
+
+Until it is approved, the version is not installable. Use `npm stage reject <stage-id>` to discard it.
 
 
 ### Scripts
