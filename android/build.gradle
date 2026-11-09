@@ -1,86 +1,42 @@
-buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["ArViewer_kotlinVersion"]
+ext.ArViewer = [
+  minSdkVersion: 24,
+  compileSdkVersion: 36,
+  sceneViewVersion: "2.3.4"
+]
 
-  repositories {
-    google()
-    mavenCentral()
+ext.getExtOrDefault = { prop ->
+  if (rootProject.ext.has(prop)) {
+    return rootProject.ext.get(prop)
   }
 
-  dependencies {
-    classpath 'com.android.tools.build:gradle:7.2.1'
-    // noinspection DifferentKotlinGradleVersion
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-  }
-}
-
-def isNewArchitectureEnabled() {
-  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+  return ArViewer[prop]
 }
 
 apply plugin: "com.android.library"
-apply plugin: "kotlin-android"
 
-
-def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
-
-if (isNewArchitectureEnabled()) {
-  apply plugin: "com.facebook.react"
+if (project.extensions.findByName("kotlin") == null) {
+  apply plugin: "kotlin-android"
 }
 
-def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["ArViewer_" + name]
-}
-
-def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["ArViewer_" + name]).toInteger()
-}
+apply plugin: "com.facebook.react"
 
 android {
-  compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
+  namespace "com.reactnativearviewer"
+
+  compileSdkVersion getExtOrDefault("compileSdkVersion")
 
   defaultConfig {
-    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
-    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
-    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
-  }
-  buildTypes {
-    release {
-      minifyEnabled false
-    }
-  }
-
-  lintOptions {
-    disable "GradleCompatible"
+    minSdkVersion getExtOrDefault("minSdkVersion")
   }
 
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility JavaVersion.VERSION_17
+    targetCompatibility JavaVersion.VERSION_17
   }
-
 }
-
-repositories {
-  mavenCentral()
-  google()
-}
-
-def kotlin_version = getExtOrDefault("kotlinVersion")
 
 dependencies {
-  // For < 0.71, this will be from the local maven repo
-  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
-  //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-native:+"
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-  implementation "com.gorisse.thomas.sceneform:sceneform:1.21.0"
-}
-
-if (isNewArchitectureEnabled()) {
-  react {
-    jsRootDir = file("../src/")
-    libraryName = "ArViewer"
-    codegenJavaPackageName = "com.reactnativearviewer"
-  }
+  implementation "com.facebook.react:react-android"
+  implementation "io.github.sceneview:arsceneview:${getExtOrDefault("sceneViewVersion")}"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
 }

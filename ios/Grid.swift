@@ -36,7 +36,7 @@ class Grid: Entity, HasModel, HasAnchoring, HasCollision {
     func generatePlaneModel() -> ModelEntity {
         var material = UnlitMaterial()
         if #available(iOS 15.0, *) {
-            let frameworkBundle = Bundle(for: ArViewerViewManager.self)
+            let frameworkBundle = Bundle(for: Grid.self)
             let bundleURL = frameworkBundle.resourceURL?.appendingPathComponent("ArViewerBundle.bundle")
             let resourceBundle = Bundle(url: bundleURL!)
             let resourceUrl = resourceBundle?.url(forResource: "grid", withExtension: "png")

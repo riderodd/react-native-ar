@@ -1,171 +1,136 @@
-import SwiftUI
+import UIKit
 
-class ArViewerView: UIView {
+public typealias ArEventHandler = ([String: Any]) -> Void
 
-    var arViewController: RealityKitViewController!
+@objc(ArViewerView)
+public class ArViewerView: UIView {
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-    }
+    var arViewController: RealityKitViewController?
+
+    @objc public var onStarted: ArEventHandler?
+    @objc public var onDataReturned: ArEventHandler?
+    @objc public var onError: ArEventHandler?
+    @objc public var onEnded: ArEventHandler?
+    @objc public var onModelPlaced: ArEventHandler?
+    @objc public var onModelRemoved: ArEventHandler?
 
     public override func layoutSubviews() {
         super.layoutSubviews()
 
-        if arViewController == nil {
-            // setup subview
-            guard let parentViewController = parentViewController else { return }
-
-            arViewController = RealityKitViewController()
+        if let arViewController = arViewController {
             arViewController.view.frame = bounds
-            parentViewController.addChild(arViewController)
-            addSubview(arViewController.view)
-            arViewController.didMove(toParent: parentViewController)
-            
-            arViewController.setUp()
-            // re-run all setters now that the view is mounted
-            arViewController.changePlaneOrientation(planeOrientation: planeOrientation)
-            arViewController.changeInstructionVisibility(isVisible: !disableInstructions)
-            arViewController.changeLightEstimationEnabled(isEnabled: lightEstimation)
-            arViewController.changeDepthManagementEnabled(isEnabled: manageDepth)
-            arViewController.changeInstantPlacementEnabled(isEnabled: !disableInstantPlacement)
-            arViewController.changeAllowScale(isAllowed: allowScale)
-            arViewController.changeAllowRotate(isAllowed: allowRotate)
-            arViewController.changeAllowTranslate(isAllowed: allowTranslate)
-            arViewController.changeModel(model: model)
-            // set events
-            if (onError != nil) {
-                arViewController.setOnErrorHandler(handler: onError!)
-            }
-            if (onStarted != nil) {
-                arViewController.setOnStartedHandler(handler: onStarted!)
-            }
-            if (onDataReturned != nil) {
-                arViewController.setOnDataReturnedHandler(handler: onDataReturned!)
-            }
-            if (onEnded != nil) {
-                arViewController.setOnEndedHandler(handler: onEnded!)
-            }
-            if (onModelPlaced != nil) {
-                arViewController.setOnModelPlacedHandler(handler: onModelPlaced!)
-            }
-            if (onModelRemoved != nil) {
-                arViewController.setOnModelRemovedHandler(handler: onModelRemoved!)
-            }
-            // and start session
-            arViewController.run()
+            return
+        }
+        guard let parentViewController = parentViewController else { return }
+
+        let controller = RealityKitViewController()
+        arViewController = controller
+        controller.view.frame = bounds
+        parentViewController.addChild(controller)
+        addSubview(controller.view)
+        controller.didMove(toParent: parentViewController)
+
+        controller.setUp()
+        controller.setOnStartedHandler { [weak self] in self?.onStarted?($0) }
+        controller.setOnErrorHandler { [weak self] in self?.onError?($0) }
+        controller.setOnDataReturnedHandler { [weak self] in self?.onDataReturned?($0) }
+        controller.setOnEndedHandler { [weak self] in self?.onEnded?($0) }
+        controller.setOnModelPlacedHandler { [weak self] in self?.onModelPlaced?($0) }
+        controller.setOnModelRemovedHandler { [weak self] in self?.onModelRemoved?($0) }
+        // props may have been set before the view was mounted
+        controller.changePlaneOrientation(planeOrientation: planeOrientation)
+        controller.changeInstructionVisibility(isVisible: !disableInstructions)
+        controller.changeLightEstimationEnabled(isEnabled: lightEstimation)
+        controller.changeDepthManagementEnabled(isEnabled: manageDepth)
+        controller.changeInstantPlacementEnabled(isEnabled: !disableInstantPlacement)
+        controller.changeAllowScale(isAllowed: allowScale)
+        controller.changeAllowRotate(isAllowed: allowRotate)
+        controller.changeAllowTranslate(isAllowed: allowTranslate)
+        controller.changeModel(model: model)
+        controller.run()
+    }
+
+    public override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window == nil {
+            tearDown()
         } else {
-            // update frame
-            arViewController?.view.frame = bounds
+            setNeedsLayout()
         }
     }
-    
-    // reset the view
-    @objc func reset() -> Void {
-        arViewController?.arView.reset()
+
+    /// Stops the AR session and detaches the view controller
+    @objc public func tearDown() {
+        guard let controller = arViewController else { return }
+        arViewController = nil
+        controller.tearDown()
+        controller.willMove(toParent: nil)
+        controller.view.removeFromSuperview()
+        controller.removeFromParent()
     }
-    
-    // take a snapshot
-    @objc func takeScreenshot(requestId: Int) -> Void {
-        arViewController?.arView.takeSnapshot(requestId: requestId)
+
+    @objc public func reset() {
+        arViewController?.arView?.reset()
     }
-    
-    // rotate model
-    @objc func rotateModel(pitch: Int, yaw: Int, roll: Int) -> Void {
-        arViewController?.arView.rotateModel(pitch: pitch, yaw: yaw, roll: roll)
-    }
-    
-    /// Remind that properties can be set before the view has been initialized
-    @objc var model: String = "" {
-      didSet {
-          arViewController?.changeModel(model: model)
-      }
-    }
-    
-    @objc var planeOrientation: String = "" {
-      didSet {
-          arViewController?.changePlaneOrientation(planeOrientation: planeOrientation)
-      }
-    }
-    
-    @objc var disableInstructions: Bool = false {
-      didSet {
-          arViewController?.changeInstructionVisibility(isVisible: !disableInstructions)
-      }
-    }
-    
-    @objc var lightEstimation: Bool = false {
-      didSet {
-          arViewController?.changeLightEstimationEnabled(isEnabled: lightEstimation)
-      }
-    }
-    
-    @objc var manageDepth: Bool = false {
-      didSet {
-          arViewController?.changeDepthManagementEnabled(isEnabled: manageDepth)
-      }
-    }
-    
-    @objc var disableInstantPlacement: Bool = false {
-      didSet {
-          arViewController?.changeInstantPlacementEnabled(isEnabled: !disableInstantPlacement)
-      }
-    }
-    
-    @objc var allowRotate: Bool = false {
-      didSet {
-          arViewController?.changeAllowRotate(isAllowed: allowRotate)
-      }
-    }
-    
-    @objc var allowScale: Bool = false {
-      didSet {
-          arViewController?.changeAllowScale(isAllowed: allowScale)
-      }
-    }
-    
-    @objc var allowTranslate: Bool = false {
-      didSet {
-          arViewController?.changeAllowTranslate(isAllowed: allowTranslate)
-      }
-    }
-    
-    @objc var onStarted: RCTDirectEventBlock? {
-        didSet {
-            arViewController?.setOnStartedHandler(handler: onStarted!)
+
+    @objc public func takeScreenshot(requestId: Int) {
+        guard let arView = arViewController?.arView else {
+            onDataReturned?(["requestId": requestId, "result": "", "error": "The AR view is not ready"])
+            return
         }
+        arView.takeSnapshot(requestId: requestId)
     }
-    
-    @objc var onDataReturned: RCTDirectEventBlock? {
-        didSet {
-            arViewController?.setOnDataReturnedHandler(handler: onDataReturned!)
-        }
+
+    @objc public func rotateModel(pitch: Float, yaw: Float, roll: Float) {
+        arViewController?.arView?.rotateModel(pitch: pitch, yaw: yaw, roll: roll)
     }
-    
-    @objc var onError: RCTDirectEventBlock? {
-        didSet {
-            arViewController?.setOnErrorHandler(handler: onError!)
-        }
+
+    @objc public var model: String = "" {
+        didSet { arViewController?.changeModel(model: model) }
     }
-    
-    @objc var onEnded: RCTDirectEventBlock? {
-        didSet {
-            arViewController?.setOnEndedHandler(handler: onError!)
-        }
+
+    @objc public var planeOrientation: String = "both" {
+        didSet { arViewController?.changePlaneOrientation(planeOrientation: planeOrientation) }
     }
-    
-    @objc var onModelPlaced: RCTDirectEventBlock? {
-        didSet {
-            arViewController?.setOnModelPlacedHandler(handler: onError!)
-        }
+
+    @objc public var disableInstructions: Bool = false {
+        didSet { arViewController?.changeInstructionVisibility(isVisible: !disableInstructions) }
     }
-    
-    @objc var onModelRemoved: RCTDirectEventBlock? {
-        didSet {
-            arViewController?.setOnModelRemovedHandler(handler: onError!)
+
+    @objc public var lightEstimation: Bool = false {
+        didSet { arViewController?.changeLightEstimationEnabled(isEnabled: lightEstimation) }
+    }
+
+    @objc public var manageDepth: Bool = false {
+        didSet { arViewController?.changeDepthManagementEnabled(isEnabled: manageDepth) }
+    }
+
+    @objc public var disableInstantPlacement: Bool = false {
+        didSet { arViewController?.changeInstantPlacementEnabled(isEnabled: !disableInstantPlacement) }
+    }
+
+    @objc public var allowRotate: Bool = false {
+        didSet { arViewController?.changeAllowRotate(isAllowed: allowRotate) }
+    }
+
+    @objc public var allowScale: Bool = false {
+        didSet { arViewController?.changeAllowScale(isAllowed: allowScale) }
+    }
+
+    @objc public var allowTranslate: Bool = false {
+        didSet { arViewController?.changeAllowTranslate(isAllowed: allowTranslate) }
+    }
+}
+
+extension UIView {
+    var parentViewController: UIViewController? {
+        var parentResponder: UIResponder? = self
+        while let responder = parentResponder {
+            if let viewController = responder as? UIViewController {
+                return viewController
+            }
+            parentResponder = responder.next
         }
+        return nil
     }
 }

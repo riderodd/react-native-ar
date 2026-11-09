@@ -1,68 +1,49 @@
-import * as React from 'react';
-
+import { useEffect, useRef, useState } from 'react';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import {
-  StyleSheet,
-  View,
-  Platform,
-  TouchableHighlight,
-  Text,
-} from 'react-native';
+  CachesDirectoryPath,
+  DocumentDirectoryPath,
+  downloadFile,
+  exists,
+  writeFile,
+} from '@dr.pogodin/react-native-fs';
 import { ArViewerView } from 'react-native-ar-viewer';
-import RNFS from 'react-native-fs';
+
+const extension = Platform.OS === 'android' ? 'glb' : 'usdz';
+const modelUrl = `https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.${extension}?raw=true`;
+
+async function downloadModel() {
+  const modelPath = `${DocumentDirectoryPath}/model.${extension}`;
+  if (!(await exists(modelPath))) {
+    await downloadFile({ fromUrl: modelUrl, toFile: modelPath }).promise;
+  }
+  return modelPath;
+}
 
 export default function App() {
-  const [localModelPath, setLocalModelPath] = React.useState<string>();
-  const [showArView, setShowArView] = React.useState(true);
-  const ref = React.useRef() as React.MutableRefObject<ArViewerView>;
+  const [localModelPath, setLocalModelPath] = useState<string>();
+  const [showArView, setShowArView] = useState(true);
+  const ref = useRef<ArViewerView>(null);
 
-  const loadPath = async () => {
-    const modelSrc =
-      Platform.OS === 'android'
-        ? 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.glb?raw=true'
-        : 'https://github.com/riderodd/react-native-ar/blob/main/example/src/dice.usdz?raw=true';
-    const modelPath = `${RNFS.DocumentDirectoryPath}/model.${
-      Platform.OS === 'android' ? 'glb' : 'usdz'
-    }`;
-    const exists = await RNFS.exists(modelPath);
-    if (!exists) {
-      await RNFS.downloadFile({
-        fromUrl: modelSrc,
-        toFile: modelPath,
-      }).promise;
+  useEffect(() => {
+    downloadModel().then(setLocalModelPath, console.error);
+  }, []);
+
+  const takeSnapshot = async () => {
+    const base64Image = await ref.current?.takeScreenshot();
+    if (!base64Image) {
+      return;
     }
-
-    setLocalModelPath(modelPath);
+    const filePath = `${CachesDirectoryPath}/arscreenshot-${Date.now()}.jpg`;
+    await writeFile(filePath, base64Image, 'base64');
+    console.log('Screenshot written to ' + filePath);
   };
-
-  React.useEffect(() => {
-    loadPath();
-  });
-
-  const takeSnapshot = () => {
-    ref.current?.takeScreenshot().then(async (base64Image) => {
-      const date = new Date();
-      const filePath = `${
-        RNFS.CachesDirectoryPath
-      }/arscreenshot-${date.getFullYear()}-${date.getMonth()}-${date.getDay()}-${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}.jpg`;
-      await RNFS.writeFile(filePath, base64Image, 'base64');
-      console.log('Screenshot written to ' + filePath);
-    });
-  };
-
-  const reset = () => {
-    ref.current?.reset();
-  };
-
-  const rotate = () => {
-    ref.current?.rotate(0, 25, 0);
-  };
-
-  const mountUnMount = () => setShowArView(!showArView);
 
   return (
     <View style={styles.container}>
       {localModelPath && showArView && (
         <ArViewerView
+          ref={ref}
           model={localModelPath}
           style={styles.arView}
           disableInstantPlacement
@@ -74,24 +55,27 @@ export default function App() {
           onEnded={() => console.log('ended')}
           onModelPlaced={() => console.log('model displayed')}
           onModelRemoved={() => console.log('model not visible anymore')}
-          ref={ref}
+          onError={({ nativeEvent }) => console.warn(nativeEvent.message)}
         />
       )}
       <View style={styles.footer}>
-        <TouchableHighlight onPress={takeSnapshot} style={styles.button}>
-          <Text>Take Snapshot</Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={mountUnMount} style={styles.button}>
-          <Text>{showArView ? 'Unmount' : 'Mount'}</Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={reset} style={styles.button}>
-          <Text>Reset</Text>
-        </TouchableHighlight>
-        <TouchableHighlight onPress={rotate} style={styles.button}>
-          <Text>Rotate</Text>
-        </TouchableHighlight>
+        <Button title="Take Snapshot" onPress={takeSnapshot} />
+        <Button
+          title={showArView ? 'Unmount' : 'Mount'}
+          onPress={() => setShowArView(!showArView)}
+        />
+        <Button title="Reset" onPress={() => ref.current?.reset()} />
+        <Button title="Rotate" onPress={() => ref.current?.rotate(0, 25, 0)} />
       </View>
     </View>
+  );
+}
+
+function Button({ title, onPress }: { title: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={styles.button}>
+      <Text>{title}</Text>
+    </Pressable>
   );
 }
 
@@ -107,7 +91,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    flexWrap: 'nowrap',
+    flexWrap: 'wrap',
     flexDirection: 'row',
     backgroundColor: 'white',
   },

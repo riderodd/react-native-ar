@@ -10,14 +10,21 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["author"]
 
-  s.platforms    = { :ios => "13.0" }
-  s.source       = { :git => "https://github.com/riderodd/react-native-ar.git", :tag => "#{s.version}" }
+  s.platforms    = { :ios => min_ios_version_supported }
+  s.source       = { :git => "https://github.com/riderodd/react-native-ar.git", :tag => "v#{s.version}" }
 
-  s.source_files = "ios/**/*.{h,m,mm,swift,xcodeproj,skybox}"
-  
+  s.source_files = "ios/**/*.{h,m,mm,swift}"
+  s.private_header_files = "ios/**/*.h"
+  s.swift_version = "5.0"
+  s.frameworks = "ARKit", "RealityKit"
+
   s.resource_bundles = {
     'ArViewerBundle' => ['ios/*.png', 'ios/*.skybox/*']
   }
 
-  s.dependency "React-Core"
+  s.pod_target_xcconfig = {
+    "DEFINES_MODULE" => "YES"
+  }
+
+  install_modules_dependencies(s)
 end
