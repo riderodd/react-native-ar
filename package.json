@@ -74,7 +74,7 @@
     "@types/react": "^19.2.0",
     "commitlint": "^21.2.4",
     "del-cli": "^8.0.1",
-    "eslint": "^9.39.5",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-ft-flow": "^3.0.11",
     "eslint-plugin-prettier": "^5.5.7",
